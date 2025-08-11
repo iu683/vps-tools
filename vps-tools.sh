@@ -1,7 +1,6 @@
 #!/bin/bash
 # VPS 常用命令合集菜单
-# 作者: Linai Li (改成你想显示的名字)
-# 用法: bash <(curl -fsSL https://raw.githubusercontent.com/你的用户名/vps-tools/main/vps-tools.sh)
+# 用法: bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh)
 
 while true; do
     clear
@@ -16,7 +15,7 @@ while true; do
     echo "8. 安装 Hysteria2"
     echo "0. 退出"
     echo "============================="
-    read -p "请输入选项编号: " choice
+    read -rp "请输入选项编号: " choice
 
     case "$choice" in
         1)
@@ -53,5 +52,5 @@ while true; do
     esac
 
     echo ""
-    read -p "按回车键继续..." 
+    read -rp "按回车键继续..."
 done
