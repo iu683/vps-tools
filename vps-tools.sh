@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 安装位置
+#================= 配置部分 =================#
 INSTALL_PATH="/usr/local/bin/m"
 SCRIPT_PATH="/root/vps-tools.sh"
 
@@ -17,6 +17,7 @@ rainbow_border() {
     echo -e "$output\e[0m"
 }
 
+# 菜单
 show_menu() {
     clear
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -42,6 +43,7 @@ show_menu() {
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
+# 执行
 execute_choice() {
     case "$1" in
         1) sudo apt update ;;
@@ -71,20 +73,16 @@ execute_choice() {
         25) bash <(curl -Ls https://Net.Check.Place) -4 ;;
         26) bash <(curl -Ls https://Net.Check.Place) -6 ;;
         27) bash <(curl -sL https://run.NodeQuality.com) ;;
-        99) echo "卸载工具箱..." && rm -f "$INSTALL_PATH" "$SCRIPT_PATH" && echo "卸载完成" ;;
+        99) 
+            echo "卸载工具箱..."
+            rm -f "$INSTALL_PATH" "$SCRIPT_PATH"
+            echo "卸载完成"
+            exit 0
+            ;;
         0) exit 0 ;;
         *) echo "无效选项" ;;
     esac
 }
-
-# 安装快捷命令
-if [ "$1" == "--install" ]; then
-    cp "$0" "$SCRIPT_PATH"
-    chmod +x "$SCRIPT_PATH"
-    ln -sf "$SCRIPT_PATH" "$INSTALL_PATH"
-    echo "已安装，直接输入 m 即可启动工具箱"
-    exit 0
-fi
 
 # 主循环
 while true; do
