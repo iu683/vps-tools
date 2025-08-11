@@ -37,7 +37,10 @@ show_menu() {
 21. WEBSSH                  22. 宝塔开心版
 23. IP解锁-IPv4             24. IP解锁-IPv6
 25. 网络质量-IPv4           26. 网络质量-IPv6
-27. NodeQuality脚本
+27. NodeQuality脚本         28. warp获取ip
+29. DDWin10                 30. Poste.io 邮局
+31. 服务器优化              32. 流媒体解锁
+33. 融合怪测试
 99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -73,6 +76,12 @@ execute_choice() {
         25) bash <(curl -Ls https://Net.Check.Place) -4 ;;
         26) bash <(curl -Ls https://Net.Check.Place) -6 ;;
         27) bash <(curl -sL https://run.NodeQuality.com) ;;
+        28) wg-quick down warp &>/dev/null; sed -i "s/Endpoint.*/Endpoint = engage.cloudflareclient.com:4500/" /etc/wireguard/warp.conf; warp o ;;
+        29) bash <(curl -sSL https://raw.githubusercontent.com/leitbogioro/Tools/master/Linux_reinstall/InstallNET.sh) -windows 10 -lang "cn" ;;
+        30) curl -sS -O https://raw.githubusercontent.com/woniu336/open_shell/main/poste_io.sh && chmod +x poste_io.sh && ./poste_io.sh ;;
+        31) bash <(curl -sL ss.hide.ss) ;;
+        32) bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh) ;;
+        33) curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh ;;
         99) 
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH" "$SCRIPT_PATH"
@@ -91,3 +100,5 @@ while true; do
     execute_choice "$choice"
     read -p "按回车键返回菜单..."
 done
+
+
