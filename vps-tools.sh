@@ -1,26 +1,15 @@
 #!/bin/bash
 
-# 启动快捷键 m/M
-SCRIPT_PATH=$(readlink -f "$0")
-alias m="bash \"$SCRIPT_PATH\""
-alias M="bash \"$SCRIPT_PATH\""
-
-# 彩虹颜色数组
+# 彩虹渐变色定义
 RAINBOW=(
-    "\033[1;31m" # 红
-    "\033[1;33m" # 黄
-    "\033[1;32m" # 绿
-    "\033[1;36m" # 青
-    "\033[1;34m" # 蓝
-    "\033[1;35m" # 紫
+    "\033[1;31m" "\033[1;33m" "\033[1;32m"
+    "\033[1;36m" "\033[1;34m" "\033[1;35m"
 )
 RESET="\033[0m"
 
 # 彩虹边框绘制函数
 rainbow_line() {
-    local text="$1"
-    local len=${#text}
-    local out=""
+    local text="$1" len=${#text} out=""
     for ((i=0; i<len; i++)); do
         out+="${RAINBOW[i % ${#RAINBOW[@]}]}${text:i:1}"
     done
@@ -40,7 +29,7 @@ MENU_ITEMS=(
     "9|3XUI|bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)"
     "10|老王工具箱|curl -fsSL https://raw.githubusercontent.com/eooce/ssh_tool/main/ssh_tool.sh -o ssh_tool.sh && chmod +x ssh_tool.sh && ./ssh_tool.sh"
     "11|科技lion|curl -sS -O https://kejilion.pro/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh"
-    "12|WARP|wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh [option] [lisence/url/token]"
+    "12|WARP|wget -N https://gitlab.com/fscarmen/warp/-/raw/main/menu.sh && bash menu.sh"
     "13|SNELL|bash <(curl -L -s menu.jinqians.com)"
     "14|国外EZRealm|wget -N https://raw.githubusercontent.com/shiyi11yi/EZRealm/main/realm.sh && chmod +x realm.sh && ./realm.sh"
     "15|国内EZRealm|wget -N https://raw.githubusercontent.com/shiyi11yi/EZRealm/main/CN/realm.sh && chmod +x realm.sh && ./realm.sh"
@@ -56,43 +45,26 @@ MENU_ITEMS=(
     "25|网络质量-IPv4|bash <(curl -Ls https://Net.Check.Place) -4"
     "26|网络质量-IPv6|bash <(curl -Ls https://Net.Check.Place) -6"
     "27|NodeQuality|bash <(curl -sL https://run.NodeQuality.com)"
-    "0|卸载工具箱|unalias m M 2>/dev/null; rm -f \"$0\"; echo '工具箱已卸载'"
+    "0|卸载工具箱|rm -f \"$0\" && echo '工具箱已卸载'"
 )
 
-# 打印菜单（双列）
+# 打印菜单
 print_menu() {
     clear
-    rainbow_line "┌────────────────────────────────────────────────────────────────┐"
-    rainbow_line "│             🌈 服务器工具箱（双列彩虹渐变版） 🌈             │"
-    rainbow_line "├────────────────────────────────────────────────────────────────┤"
-    local cols=2
-    local width=40
-    local count=0
-    local line=""
+    rainbow_line "┌──────────────────────────────┐"
+    rainbow_line "│   🌈 服务器工具箱（单列版） 🌈 │"
+    rainbow_line "├──────────────────────────────┤"
     for item in "${MENU_ITEMS[@]}"; do
         IFS="|" read -r num name cmd <<< "$item"
-        entry="$(printf "\033[1;33m%2s\033[0m. %-*s" "$num" $((width-4)) "$name")"
-        line+="$entry"
-        ((count++))
-        if (( count % cols == 0 )); then
-            echo -e "│ $line │"
-            line=""
-        fi
+        printf "│ \033[1;33m%2s\033[0m. %-22s │\n" "$num" "$name"
     done
-    if [[ -n "$line" ]]; then
-        while (( count % cols != 0 )); do
-            line+="$(printf "%-${width}s" " ")"
-            ((count++))
-        done
-        echo -e "│ $line │"
-    fi
-    rainbow_line "└────────────────────────────────────────────────────────────────┘"
+    rainbow_line "└──────────────────────────────┘"
 }
 
 # 主循环
 while true; do
     print_menu
-    read -rp "请输入序号执行（q退出）: " choice
+    read -rp "请输入序号执行（或 q 退出）: " choice
     [[ "$choice" =~ ^[Qq]$ ]] && exit 0
     for item in "${MENU_ITEMS[@]}"; do
         IFS="|" read -r num name cmd <<< "$item"
