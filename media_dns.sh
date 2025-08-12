@@ -3,7 +3,7 @@
 
 # DNS 列表
 declare -A dns_list=(
-  ["Default"]="154.83.83.83"
+  ["Def"]="154.83.83.83"
   ["HK"]="154.83.83.84"
   ["JP"]="154.83.83.85"
   ["TW"]="154.83.83.86"
@@ -12,7 +12,7 @@ declare -A dns_list=(
   ["UK"]="154.83.83.89"
   ["DE"]="154.83.83.90"
   ["RFC"]="22.22.22.22"
-  ["Custom"]="custom"
+  ["Cus"]="custom"
 )
 
 # 绿色
@@ -37,7 +37,7 @@ read -p "$(echo -e ${green}请输入编号:${reset}) " choice
 regions=("${!dns_list[@]}")
 if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#regions[@]} )); then
     region="${regions[$((choice-1))]}"
-    if [[ "$region" == "Custom" ]]; then
+    if [[ "$region" == "Cus" ]]; then
         read -p "$(echo -e ${green}请输入自定义 DNS IP 地址:${reset}) " custom_dns
         dns_to_set="$custom_dns"
     else
