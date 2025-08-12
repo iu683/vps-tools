@@ -26,7 +26,7 @@ install_dependencies() {
   elif command -v zypper >/dev/null 2>&1; then
     zypper install -y curl vnstat lsb-release || true
   else
-    printf "${white}未识别包管理器，跳过依赖安装${re}\n"
+    printf "%b未识别包管理器，跳过依赖安装%b\n" "$white" "$re"
   fi
 }
 
@@ -55,7 +55,6 @@ cpu_info=$(get_cpu_info)
 
 # CPU 使用率计算，适配更多版本
 get_cpu_usage() {
-  # 读取第一次统计
   cpu_line1=($(head -n1 /proc/stat))
   idle1=${cpu_line1[4]}
   total1=0
@@ -63,7 +62,6 @@ get_cpu_usage() {
     total1=$((total1 + val))
   done
   sleep 1
-  # 读取第二次统计
   cpu_line2=($(head -n1 /proc/stat))
   idle2=${cpu_line2[4]}
   total2=0
@@ -165,33 +163,33 @@ fi
 
 runtime=$(awk -F. '{run_days=int($1 / 86400);run_hours=int(($1 % 86400) / 3600);run_minutes=int(($1 % 3600) / 60); if (run_days > 0) printf("%d天 ", run_days); if (run_hours > 0) printf("%d时 ", run_hours); printf("%d分\n", run_minutes)}' /proc/uptime)
 
-# 输出
-printf "${white}系统信息详情${re}\n"
+# 输出部分，安全使用printf避免错误
+printf "%b系统信息详情%b\n" "$white" "$re"
 printf "------------------------\n"
-printf "${white}主机名: ${purple}%s${re}\n" "$hostname"
-printf "${white}运营商: ${purple}%s${re}\n" "$isp_info"
+printf "%b主机名: %b%s%b\n" "$white" "$purple" "$hostname" "$re"
+printf "%b运营商: %b%s%b\n" "$white" "$purple" "$isp_info" "$re"
 printf "------------------------\n"
-printf "${white}系统版本: ${purple}%s${re}\n" "$os_info"
-printf "${white}Linux版本: ${purple}%s${re}\n" "$kernel_version"
+printf "%b系统版本: %b%s%b\n" "$white" "$purple" "$os_info" "$re"
+printf "%bLinux版本: %b%s%b\n" "$white" "$purple" "$kernel_version" "$re"
 printf "------------------------\n"
-printf "${white}CPU架构: ${purple}%s${re}\n" "$cpu_arch"
-printf "${white}CPU型号: ${purple}%s${re}\n" "$cpu_info"
-printf "${white}CPU核心数: ${purple}%s${re}\n" "$cpu_cores"
+printf "%bCPU架构: %b%s%b\n" "$white" "$purple" "$cpu_arch" "$re"
+printf "%bCPU型号: %b%s%b\n" "$white" "$purple" "$cpu_info" "$re"
+printf "%bCPU核心数: %b%s%b\n" "$white" "$purple" "$cpu_cores" "$re"
 printf "------------------------\n"
-printf "${white}CPU占用: ${purple}%s${re}\n" "$cpu_usage_percent"
-printf "${white}物理内存: ${purple}%s${re}\n" "$mem_info"
-printf "${white}虚拟内存: ${purple}%s${re}\n" "$swap_info"
-printf "${white}硬盘占用: ${purple}%s${re}\n" "$disk_info"
+printf "%bCPU占用: %b%s%b\n" "$white" "$purple" "$cpu_usage_percent" "$re"
+printf "%b物理内存: %b%s%b\n" "$white" "$purple" "$mem_info" "$re"
+printf "%b虚拟内存: %b%s%b\n" "$white" "$purple" "$swap_info" "$re"
+printf "%b硬盘占用: %b%s%b\n" "$white" "$purple" "$disk_info" "$re"
 printf "------------------------\n"
-printf "${purple}%s${re}\n" "$output"
+printf "%b%s%b\n" "$purple" "$output" "$re"
 printf "------------------------\n"
-printf "${white}网络拥堵算法: ${purple}%s %s${re}\n" "$congestion_algorithm" "$queue_algorithm"
+printf "%b网络拥堵算法: %b%s %s%b\n" "$white" "$purple" "$congestion_algorithm" "$queue_algorithm" "$re"
 printf "------------------------\n"
-printf "${white}公网IPv4地址: ${purple}%s${re}\n" "$ipv4_address"
-printf "${white}公网IPv6地址: ${purple}%s${re}\n" "$ipv6_address"
+printf "%b公网IPv4地址: %b%s%b\n" "$white" "$purple" "$ipv4_address" "$re"
+printf "%b公网IPv6地址: %b%s%b\n" "$white" "$purple" "$ipv6_address" "$re"
 printf "------------------------\n"
-printf "${white}地理位置: ${purple}%s %s${re}\n" "$country" "$city"
-printf "${white}系统时间: ${purple}%s${re}\n" "$current_time"
+printf "%b地理位置: %b%s %s%b\n" "$white" "$purple" "$country" "$city" "$re"
+printf "%b系统时间: %b%s%b\n" "$white" "$purple" "$current_time" "$re"
 printf "------------------------\n"
-printf "${white}系统运行时长: ${purple}%s${re}\n" "$runtime"
+printf "%b系统运行时长: %b%s%b\n" "$white" "$purple" "$runtime" "$re"
 printf "\n"
