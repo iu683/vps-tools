@@ -2,6 +2,7 @@
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 SHORTCUT_PATH="/usr/local/bin/m"
+SHORTCUT_PATH_UPPER="/usr/local/bin/M"
 
 # 颜色定义
 green="\033[32m"
@@ -51,18 +52,23 @@ show_menu() {
     echo -e "${reset}"
 }
 
-# 快捷指令安装
+# 快捷指令安装（创建 m 和 M 两个）
 install_shortcut() {
-    echo "创建快捷指令 m"
+    echo "创建快捷指令 m 和 M"
     echo "bash $INSTALL_PATH" | sudo tee "$SHORTCUT_PATH" >/dev/null
     sudo chmod +x "$SHORTCUT_PATH"
+    sudo ln -sf "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"
 }
 
-# 快捷指令卸载
+# 快捷指令卸载（删除 m 和 M）
 remove_shortcut() {
     if [ -f "$SHORTCUT_PATH" ]; then
         echo "删除快捷指令 m"
         sudo rm -f "$SHORTCUT_PATH"
+    fi
+    if [ -f "$SHORTCUT_PATH_UPPER" ]; then
+        echo "删除快捷指令 M"
+        sudo rm -f "$SHORTCUT_PATH_UPPER"
     fi
 }
 
@@ -125,7 +131,7 @@ while true; do
     read -p "按回车键返回菜单..."
 
     # 自动创建快捷指令（如果不存在）
-    if [ ! -f "$SHORTCUT_PATH" ]; then
+    if [ ! -f "$SHORTCUT_PATH" ] || [ ! -f "$SHORTCUT_PATH_UPPER" ]; then
         install_shortcut
     fi
 done
