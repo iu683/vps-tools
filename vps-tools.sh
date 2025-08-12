@@ -41,7 +41,7 @@ show_menu() {
 27. NodeQuality脚本         28. 本机信息
 29. DDWin10                 30. Poste.io 邮局
 31. 服务器优化              32. 流媒体解锁
-33. 融合怪测试
+33. 融合怪测试              34. 安装 Docker Compose
 99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -84,6 +84,7 @@ execute_choice() {
         31) bash <(curl -sL ss.hide.ss) ;;
         32) bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh) ;;
         33) curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh ;;
+        34) sudo apt install docker-compose-plugin -y ;;
         99) 
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH" "$SCRIPT_PATH"
