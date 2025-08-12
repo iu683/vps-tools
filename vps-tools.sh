@@ -3,11 +3,9 @@
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 SHORTCUT_PATH="/usr/local/bin/m"
 
-# 颜色定义
 green="\033[32m"
 reset="\033[0m"
 
-# 彩虹打印函数
 rainbow_border() {
     local text="$1"
     local colors=(31 33 32 36 34 35)
@@ -20,7 +18,6 @@ rainbow_border() {
     echo -e "$output${reset}"
 }
 
-# 菜单
 show_menu() {
     clear
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -28,32 +25,36 @@ show_menu() {
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${green}"
     echo -e "
- 1. 更新源                  2. 更新curl
- 3. 哪吒压缩包              4. 卸载哪吒探针
- 5. v1关SSH                 6. v0关SSH
- 7. DDNS                    8. HY2
- 9. 3XUI                    10. 老王工具箱
-11. 科技lion                12. WARP
-13. SNELL                   14. 国外EZRealm
-15. 国内EZRealm             16. V0哪吒
-17. 一点科技                18. Sub-Store
-19. 宝塔面板                20. 1panel面板
-21. WEBSSH                  22. 宝塔开心版
-23. IP解锁-IPv4             24. IP解锁-IPv6
-25. 网络质量-IPv4           26. 网络质量-IPv6
-27. NodeQuality脚本         28. 本机信息
-29. DDWin10                 30. Poste.io 邮局
-31. 服务器优化              32. 流媒体解锁
-33. 融合怪测试              34. 安装 Docker Compose
-35. 3x-ui-alpines           36. 临时禁用IPv6
-37. 添加SWAP                38. TCP窗口调优
-99. 卸载工具箱              0. 退出
+  1. 更新源                  2. 更新curl
+  3. 哪吒压缩包              4. 卸载哪吒探针
+  5. v1关SSH                 6. v0关SSH
+  7. DDNS                    8. HY2
+  9. 3XUI                    10. 老王工具箱
+ 11. 科技lion                12. WARP
+ 13. SNELL                   14. 国外EZRealm
+ 15. 国内EZRealm             16. V0哪吒
+ 17. 一点科技                18. Sub-Store
+ 19. 宝塔面板                20. 1panel面板
+ 21. WEBSSH                  22. 宝塔开心版
+ 23. IP解锁-IPv4             24. IP解锁-IPv6
+ 25. 网络质量-IPv4           26. 网络质量-IPv6
+ 27. NodeQuality脚本         28. 本机信息
+ 29. DDWin10                 30. Poste.io 邮局
+ 31. 服务器优化              32. 流媒体解锁
+ 33. 融合怪测试              34. 安装 Docker Compose
+ 35. 3x-ui-alpines           36. 临时禁用IPv6
+ 37. 添加SWAP                38. TCP窗口调优
+ 39. gost                    40. 极光面板
+ 41. 安装Python              42. 自定义DNS解锁
+ 43. Docker备份和恢复        44. Docker容器迁移
+ 45. VPS Toolkit             46. NGINX反代
+ 47. OpenList                48. 哆啦A梦转发面板
+ 99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${reset}"
 }
 
-# 快捷指令安装
 install_shortcut() {
     echo "创建快捷指令 m"
     local script_path
@@ -63,7 +64,6 @@ install_shortcut() {
     sudo chmod +x "$SHORTCUT_PATH"
 }
 
-# 快捷指令卸载
 remove_shortcut() {
     if [ -f "$SHORTCUT_PATH" ]; then
         echo "删除快捷指令 m"
@@ -71,7 +71,6 @@ remove_shortcut() {
     fi
 }
 
-# 选项执行函数
 execute_choice() {
     case "$1" in
         1) sudo apt update ;;
@@ -108,20 +107,20 @@ execute_choice() {
         32) bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh) ;;
         33) curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh ;;
         34) sudo apt install docker-compose-plugin -y ;;
-        35)
-            apk add curl bash gzip openssl
-            bash <(curl -Ls https://raw.githubusercontent.com/StarVM-OpenSource/3x-ui-Apline/refs/heads/main/install.sh)
-            ;;
-        36)
-            sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
-            sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
-            ;;
-        37)
-            wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
-            ;;
-        38)
-            wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh
-            ;;
+        35) apk add curl bash gzip openssl && bash <(curl -Ls https://raw.githubusercontent.com/StarVM-OpenSource/3x-ui-Apline/refs/heads/main/install.sh) ;;
+        36) sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 ;;
+        37) wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh ;;
+        38) wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh ;;
+        39) wget --no-check-certificate -O gost.sh https://raw.githubusercontent.com/qqrrooty/EZgost/main/gost.sh && chmod +x gost.sh && ./gost.sh ;;
+        40) bash <(curl -fsSL https://raw.githubusercontent.com/Aurora-Admin-Panel/deploy/main/install.sh) ;;
+        41) curl -O https://raw.githubusercontent.com/lx969788249/lxspacepy/master/pyinstall.sh && chmod +x pyinstall.sh && ./pyinstall.sh ;;
+        42) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/media_dns.sh) ;;
+        43) curl -fsSL https://raw.githubusercontent.com/xymn2023/DMR/main/docker_back.sh -o docker_back.sh && chmod +x docker_back.sh && ./docker_back.sh ;;
+        44) curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh && chmod +x Docker_container_migration.sh && ./Docker_container_migration.sh ;;
+        45) bash <(curl -sSL https://raw.githubusercontent.com/zeyu8023/vps_toolkit/main/install.sh) ;;
+        46) bash <(curl -sL kejilion.sh) fd ;;
+        47) curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && sudo bash install-openlist-v4.sh ;;
+        48) curl -L https://raw.githubusercontent.com/bqlpfy/forward-panel/refs/heads/main/panel_install.sh -o panel_install.sh && chmod +x panel_install.sh && ./panel_install.sh ;;
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
@@ -129,21 +128,19 @@ execute_choice() {
             echo "卸载完成"
             exit 0
             ;;
-        0) exit 0 ;;
+        0) echo "退出" ; exit 0 ;;
         *)
             echo "无效选项"
             ;;
     esac
 }
 
-# 主循环
 while true; do
     show_menu
-    read -p "请输入选项: " choice
+    read -p "请输入选项编号: " choice
     execute_choice "$choice"
-    read -p "按回车键返回菜单..."
+    read -p "按回车返回菜单..."
 
-    # 自动创建快捷指令（如果不存在）
     if [ ! -f "$SHORTCUT_PATH" ]; then
         install_shortcut
     fi
