@@ -1,8 +1,8 @@
 #!/bin/bash
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
-SHORTCUT_PATH="/usr/local/bin/m"
-SHORTCUT_PATH_UPPER="/usr/local/bin/M"
+SHORTCUT_LOWER="/usr/local/bin/m"
+SHORTCUT_UPPER="/usr/local/bin/M"
 
 # 颜色定义
 green="\033[32m"
@@ -52,27 +52,22 @@ show_menu() {
     echo -e "${reset}"
 }
 
-# 快捷指令安装（创建 m 和 M 两个）
-install_shortcut() {
+install_shortcuts() {
     echo "创建快捷指令 m 和 M"
-    echo "bash $INSTALL_PATH" | sudo tee "$SHORTCUT_PATH" >/dev/null
-    sudo chmod +x "$SHORTCUT_PATH"
-    sudo ln -sf "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"
+    echo "bash $INSTALL_PATH" | sudo tee "$SHORTCUT_LOWER" >/dev/null
+    echo "bash $INSTALL_PATH" | sudo tee "$SHORTCUT_UPPER" >/dev/null
+    sudo chmod +x "$SHORTCUT_LOWER" "$SHORTCUT_UPPER"
 }
 
-# 快捷指令卸载（删除 m 和 M）
-remove_shortcut() {
-    if [ -f "$SHORTCUT_PATH" ]; then
-        echo "删除快捷指令 m"
-        sudo rm -f "$SHORTCUT_PATH"
-    fi
-    if [ -f "$SHORTCUT_PATH_UPPER" ]; then
-        echo "删除快捷指令 M"
-        sudo rm -f "$SHORTCUT_PATH_UPPER"
-    fi
+remove_shortcuts() {
+    for sc in "$SHORTCUT_LOWER" "$SHORTCUT_UPPER"; do
+        if [ -f "$sc" ]; then
+            echo "删除快捷指令 $sc"
+            sudo rm -f "$sc"
+        fi
+    done
 }
 
-# 选项执行函数
 execute_choice() {
     case "$1" in
         1) sudo apt update ;;
@@ -112,7 +107,7 @@ execute_choice() {
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
-            remove_shortcut
+            remove_shortcuts
             echo "卸载完成"
             exit 0
             ;;
@@ -131,7 +126,7 @@ while true; do
     read -p "按回车键返回菜单..."
 
     # 自动创建快捷指令（如果不存在）
-    if [ ! -f "$SHORTCUT_PATH" ] || [ ! -f "$SHORTCUT_PATH_UPPER" ]; then
-        install_shortcut
+    if [ ! -f "$SHORTCUT_LOWER" ] || [ ! -f "$SHORTCUT_UPPER" ]; then
+        install_shortcuts
     fi
 done
