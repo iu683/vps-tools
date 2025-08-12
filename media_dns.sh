@@ -19,39 +19,47 @@ declare -A dns_list=(
 green="\033[32m"
 reset="\033[0m"
 
-# 显示菜单（双列）
-echo -e "${green}请选择要使用的 DNS 区域：${reset}"
-count=0
-for region in "${!dns_list[@]}"; do
-    printf "${green}%-10s${reset}" "[$((++count))] $region"
-    if (( count % 2 == 0 )); then
-        echo ""
+while true; do
+    # 显示菜单（双列）
+    echo -e "${green}请选择要使用的 DNS 区域（0 返回/退出）：${reset}"
+    count=0
+    for region in "${!dns_list[@]}"; do
+        printf "${green}%-10s${reset}" "[$((++count))] $region"
+        if (( count % 2 == 0 )); then
+            echo ""
+        fi
+    done
+    echo -e "\n${green}[0] 返回/退出${reset}\n"
+
+    # 选择输入
+    read -p "$(echo -e ${green}请输入编号:${reset}) " choice
+
+    # 退出
+    if [[ "$choice" == "0" ]]; then
+        echo -e "${green}已返回/退出脚本${reset}"
+        exit 0
+    fi
+
+    # 获取对应选项
+    regions=("${!dns_list[@]}")
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#regions[@]} )); then
+        region="${regions[$((choice-1))]}"
+        if [[ "$region" == "Cus" ]]; then
+            read -p "$(echo -e ${green}请输入自定义 DNS IP 地址:${reset}) " custom_dns
+            dns_to_set="$custom_dns"
+        else
+            dns_to_set="${dns_list[$region]}"
+        fi
+
+        # 应用 DNS
+        if [[ -n "$dns_to_set" ]]; then
+            echo -e "${green}正在设置 DNS 为 $dns_to_set ($region) ...${reset}"
+            cp /etc/resolv.conf /etc/resolv.conf.bak
+            echo "nameserver $dns_to_set" > /etc/resolv.conf
+            echo -e "${green}DNS 已切换完成${reset}\n"
+        fi
+        break
+    else
+        echo -e "${green}无效选择，请重新输入。${reset}"
     fi
 done
-echo ""
-
-# 选择输入
-read -p "$(echo -e ${green}请输入编号:${reset}) " choice
-
-# 获取对应选项
-regions=("${!dns_list[@]}")
-if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#regions[@]} )); then
-    region="${regions[$((choice-1))]}"
-    if [[ "$region" == "Cus" ]]; then
-        read -p "$(echo -e ${green}请输入自定义 DNS IP 地址:${reset}) " custom_dns
-        dns_to_set="$custom_dns"
-    else
-        dns_to_set="${dns_list[$region]}"
-    fi
-else
-    echo -e "${green}无效选择，退出。${reset}"
-    exit 1
-fi
-
-# 应用 DNS
-if [[ -n "$dns_to_set" ]]; then
-    echo -e "${green}正在设置 DNS 为 $dns_to_set ($region) ...${reset}"
-    cp /etc/resolv.conf /etc/resolv.conf.bak
-    echo "nameserver $dns_to_set" > /etc/resolv.conf
-    echo -e "${green}DNS 已切换完成${reset}\n"
-fi
