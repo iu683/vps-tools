@@ -1,5 +1,5 @@
 #!/bin/bash
-# 流媒体解锁 DNS 设置 + 检测脚本
+# 流媒体解锁 DNS 快捷切换脚本（无检测）
 
 # DNS 列表
 declare -A dns_list=(
@@ -11,6 +11,8 @@ declare -A dns_list=(
   ["US"]="154.83.83.88"
   ["UK"]="154.83.83.89"
   ["DE"]="154.83.83.90"
+  ["RFC"]="22.22.22.22"
+  ["Custom"]="custom"
 )
 
 # 颜色
@@ -21,17 +23,21 @@ reset="\033[0m"
 # 菜单
 echo -e "${yellow}请选择要使用的 DNS 区域：${reset}"
 select region in "${!dns_list[@]}"; do
-    if [[ -n "${dns_list[$region]}" ]]; then
-        echo -e "${green}正在设置 DNS 为 ${dns_list[$region]} ($region) ...${reset}"
-        cp /etc/resolv.conf /etc/resolv.conf.bak
-        echo "nameserver ${dns_list[$region]}" > /etc/resolv.conf
-        echo -e "${green}DNS 已切换完成${reset}\n"
-        
-        # 检测
-        echo -e "${yellow}正在检测流媒体解锁情况...${reset}"
-        bash <(curl -L -s https://github.com/1-stream/RegionRestrictionCheck/raw/main/check.sh) -M 4
-        break
+    if [[ "$region" == "Custom" ]]; then
+        read -p "请输入自定义 DNS IP 地址: " custom_dns
+        dns_to_set="$custom_dns"
+    elif [[ -n "${dns_list[$region]}" ]]; then
+        dns_to_set="${dns_list[$region]}"
     else
         echo "无效选择，请重新输入。"
+        continue
+    fi
+
+    if [[ -n "$dns_to_set" ]]; then
+        echo -e "${green}正在设置 DNS 为 $dns_to_set ($region) ...${reset}"
+        cp /etc/resolv.conf /etc/resolv.conf.bak
+        echo "nameserver $dns_to_set" > /etc/resolv.conf
+        echo -e "${green}DNS 已切换完成${reset}\n"
+        break
     fi
 done
