@@ -17,7 +17,7 @@ rainbow_border() {
         output+="\033[${colors[$i]}m${text:$c:1}"
         ((i=(i+1)%${#colors[@]}))
     done
-    echo -e "$output\033[0m"
+    echo -e "$output${reset}"
 }
 
 # 菜单
@@ -45,6 +45,8 @@ show_menu() {
 29. DDWin10                 30. Poste.io 邮局
 31. 服务器优化              32. 流媒体解锁
 33. 融合怪测试              34. 安装 Docker Compose
+35. 3x-ui-alpines           36. 临时禁用IPv6
+37. 添加SWAP                38. fishtools
 99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -54,7 +56,10 @@ show_menu() {
 # 快捷指令安装
 install_shortcut() {
     echo "创建快捷指令 m"
-    echo "bash $INSTALL_PATH" | sudo tee "$SHORTCUT_PATH" >/dev/null
+    local script_path
+    script_path=$(realpath "$0")
+    echo "#!/bin/bash" | sudo tee "$SHORTCUT_PATH" >/dev/null
+    echo "bash \"$script_path\"" | sudo tee -a "$SHORTCUT_PATH" >/dev/null
     sudo chmod +x "$SHORTCUT_PATH"
 }
 
@@ -103,6 +108,20 @@ execute_choice() {
         32) bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh) ;;
         33) curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh ;;
         34) sudo apt install docker-compose-plugin -y ;;
+        35)
+            apk add curl bash gzip openssl
+            bash <(curl -Ls https://raw.githubusercontent.com/StarVM-OpenSource/3x-ui-Apline/refs/heads/main/install.sh)
+            ;;
+        36)
+            sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+            sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+            ;;
+        37)
+            wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
+            ;;
+        38)
+            bash <(curl -sL https://raw.githubusercontent.com/qqzhoufan/fishtools/main/fishtools.sh)
+            ;;
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
