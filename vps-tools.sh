@@ -46,7 +46,7 @@ show_menu() {
 31. 服务器优化              32. 流媒体解锁
 33. 融合怪测试              34. 安装 Docker Compose
 35. 3x-ui-alpines           36. 临时禁用IPv6
-37. 添加SWAP                38. fishtools
+37. 添加SWAP                38. TCP窗口调优
 99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -120,7 +120,7 @@ execute_choice() {
             wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh
             ;;
         38)
-            bash <(curl -sL https://raw.githubusercontent.com/qqzhoufan/fishtools/main/fishtools.sh)
+            wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh
             ;;
         99)
             echo "卸载工具箱..."
