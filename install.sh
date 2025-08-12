@@ -1,18 +1,15 @@
 #!/bin/bash
 
-INSTALL_PATH="$HOME/vps-toolbox.sh"
-REPO_URL="https://raw.githubusercontent.com/yourusername/vps-toolbox/main"
+# 你的 GitHub 直链（替换成自己的仓库地址）
+GITHUB_URL="https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh"
 
-echo "开始安装服务器工具箱..."
-
-curl -fsSL "$REPO_URL/vps-toolbox.sh" -o "$INSTALL_PATH"
-chmod +x "$INSTALL_PATH"
-
-# 创建快捷指令 m 和 M（软链接）
-for cmd in m M; do
-    echo "创建快捷指令 $cmd"
-    sudo ln -sf "$INSTALL_PATH" "/usr/local/bin/$cmd"
-done
-
-echo "安装完成！你可以通过输入 m 或 M 来运行工具箱"
+# 安装快捷启动 m
+if [[ ! -f /usr/local/bin/m ]]; then
+    echo "注册快捷启动命令 m..."
+    echo "bash <(curl -fsSL $GITHUB_URL)" > /usr/local/bin/m
+    chmod +x /usr/local/bin/m
+    echo "安装完成！直接输入 m 即可运行工具箱"
+else
+    echo "m 已存在，跳过安装"
+fi
 
