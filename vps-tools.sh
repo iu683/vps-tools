@@ -49,6 +49,8 @@ show_menu() {
  43. Docker备份和恢复        44. Docker容器迁移
  45. VPS Toolkit             46. NGINX反代
  47. OpenList                48. 哆啦A梦转发面板
+ 49. 国外三网测速            50. 国内三网测速
+ 51. 国外三网延迟测试        52. 国内三网延迟测试
  99. 卸载工具箱              0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -121,6 +123,10 @@ execute_choice() {
         46) bash <(curl -sL kejilion.sh) fd ;;
         47) curl -fsSL https://res.oplist.org/script/v4.sh > install-openlist-v4.sh && sudo bash install-openlist-v4.sh ;;
         48) curl -L https://raw.githubusercontent.com/bqlpfy/forward-panel/refs/heads/main/panel_install.sh -o panel_install.sh && chmod +x panel_install.sh && ./panel_install.sh ;;
+        49) bash <(wget -qO- bash.spiritlhl.net/ecs-net) ;;
+        50) bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh) ;;
+        51) bash <(wget -qO- bash.spiritlhl.net/ecs-ping) ;;
+        52) bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh) ;;
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
