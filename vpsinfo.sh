@@ -6,13 +6,13 @@ purple="\033[35m"
 re="\033[0m"
 
 # ASCII VPS Logo
-printf "${purple}"
-printf " _    __ ____   _____ \n"
-printf "| |  / // __ \\ / ___/ \n"
-printf "| | / // /_/ / \\__ \\  \n"
-printf "| |/ // ____/ ___/ /  \n"
-printf "|___//_/     /____/   \n"
-printf "${re}"
+printf -- "${purple}"
+printf -- " _    __ ____   _____ \n"
+printf -- "| |  / // __ \\ / ___/ \n"
+printf -- "| | / // /_/ / \\__ \\  \n"
+printf -- "| |/ // ____/ ___/ /  \n"
+printf -- "|___//_/     /____/   \n"
+printf -- "${re}"
 
 # 安装依赖函数，支持多包管理器
 install_deps(){
@@ -26,7 +26,7 @@ install_deps(){
   elif command -v zypper >/dev/null 2>&1; then
     zypper install -y curl vnstat lsb-release
   else
-    printf "%b未识别的包管理器，跳过依赖安装%b\n" "$white" "$re"
+    printf -- "%b未识别的包管理器，跳过依赖安装%b\n" "$white" "$re"
   fi
 }
 install_deps
@@ -143,7 +143,7 @@ get_net_traffic(){
 
   rx_formatted=$(format_bytes $rx_total)
   tx_formatted=$(format_bytes $tx_total)
-  printf "总接收: %s\n总发送: %s\n" "$rx_formatted" "$tx_formatted"
+  printf -- "总接收: %s\n总发送: %s\n" "$rx_formatted" "$tx_formatted"
 }
 output=$(get_net_traffic)
 
@@ -159,33 +159,33 @@ else
 fi
 runtime=$(awk -F. '{run_days=int($1/86400); run_hours=int(($1%86400)/3600); run_minutes=int(($1%3600)/60); if(run_days>0) printf("%d天 ",run_days); if(run_hours>0) printf("%d时 ",run_hours); printf("%d分\n",run_minutes)}' /proc/uptime)
 
-# 输出，使用printf防止printf参数误解析
-printf "%b系统信息详情%b\n" "$white" "$re"
-printf "------------------------\n"
-printf "%b主机名: %b%s%b\n" "$white" "$purple" "$hostname" "$re"
-printf "%b运营商: %b%s%b\n" "$white" "$purple" "$isp_info" "$re"
-printf "------------------------\n"
-printf "%b系统版本: %b%s%b\n" "$white" "$purple" "$os_info" "$re"
-printf "%bLinux版本: %b%s%b\n" "$white" "$purple" "$kernel_version" "$re"
-printf "------------------------\n"
-printf "%bCPU架构: %b%s%b\n" "$white" "$purple" "$cpu_arch" "$re"
-printf "%bCPU型号: %b%s%b\n" "$white" "$purple" "$cpu_info" "$re"
-printf "%bCPU核心数: %b%s%b\n" "$white" "$purple" "$cpu_cores" "$re"
-printf "------------------------\n"
-printf "%bCPU占用: %b%s%b\n" "$white" "$purple" "$cpu_usage_percent" "$re"
-printf "%b物理内存: %b%s%b\n" "$white" "$purple" "$mem_info" "$re"
-printf "%b虚拟内存: %b%s%b\n" "$white" "$purple" "$swap_info" "$re"
-printf "%b硬盘占用: %b%s%b\n" "$white" "$purple" "$disk_info" "$re"
-printf "------------------------\n"
-printf "%b%s%b\n" "$purple" "$output" "$re"
-printf "------------------------\n"
-printf "%b网络拥堵算法: %b%s %s%b\n" "$white" "$purple" "$congestion_algorithm" "$queue_algorithm" "$re"
-printf "------------------------\n"
-printf "%b公网IPv4地址: %b%s%b\n" "$white" "$purple" "$ipv4_address" "$re"
-printf "%b公网IPv6地址: %b%s%b\n" "$white" "$purple" "$ipv6_address" "$re"
-printf "------------------------\n"
-printf "%b地理位置: %b%s %s%b\n" "$white" "$purple" "$country" "$city" "$re"
-printf "%b系统时间: %b%s%b\n" "$white" "$purple" "$current_time" "$re"
-printf "------------------------\n"
-printf "%b系统运行时长: %b%s%b\n" "$white" "$purple" "$runtime" "$re"
-printf "\n"
+# 输出，全部printf加--参数
+printf -- "%b系统信息详情%b\n" "$white" "$re"
+printf -- "------------------------\n"
+printf -- "%b主机名: %b%s%b\n" "$white" "$purple" "$hostname" "$re"
+printf -- "%b运营商: %b%s%b\n" "$white" "$purple" "$isp_info" "$re"
+printf -- "------------------------\n"
+printf -- "%b系统版本: %b%s%b\n" "$white" "$purple" "$os_info" "$re"
+printf -- "%bLinux版本: %b%s%b\n" "$white" "$purple" "$kernel_version" "$re"
+printf -- "------------------------\n"
+printf -- "%bCPU架构: %b%s%b\n" "$white" "$purple" "$cpu_arch" "$re"
+printf -- "%bCPU型号: %b%s%b\n" "$white" "$purple" "$cpu_info" "$re"
+printf -- "%bCPU核心数: %b%s%b\n" "$white" "$purple" "$cpu_cores" "$re"
+printf -- "------------------------\n"
+printf -- "%bCPU占用: %b%s%b\n" "$white" "$purple" "$cpu_usage_percent" "$re"
+printf -- "%b物理内存: %b%s%b\n" "$white" "$purple" "$mem_info" "$re"
+printf -- "%b虚拟内存: %b%s%b\n" "$white" "$purple" "$swap_info" "$re"
+printf -- "%b硬盘占用: %b%s%b\n" "$white" "$purple" "$disk_info" "$re"
+printf -- "------------------------\n"
+printf -- "%b%s%b\n" "$purple" "$output" "$re"
+printf -- "------------------------\n"
+printf -- "%b网络拥堵算法: %b%s %s%b\n" "$white" "$purple" "$congestion_algorithm" "$queue_algorithm" "$re"
+printf -- "------------------------\n"
+printf -- "%b公网IPv4地址: %b%s%b\n" "$white" "$purple" "$ipv4_address" "$re"
+printf -- "%b公网IPv6地址: %b%s%b\n" "$white" "$purple" "$ipv6_address" "$re"
+printf -- "------------------------\n"
+printf -- "%b地理位置: %b%s %s%b\n" "$white" "$purple" "$country" "$city" "$re"
+printf -- "%b系统时间: %b%s%b\n" "$white" "$purple" "$current_time" "$re"
+printf -- "------------------------\n"
+printf -- "%b系统运行时长: %b%s%b\n" "$white" "$purple" "$runtime" "$re"
+printf -- "\n"
