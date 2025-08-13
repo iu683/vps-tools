@@ -30,4 +30,4 @@ EOF"
 create_shortcut "m"
 create_shortcut "M"
 
-echo -e "\n安装完成！你可以输入 m 或 M 运行工具箱。\n"
+echo -e "\n安装完成！你可以输入 m 或 M 运行iu工具箱。\n"
