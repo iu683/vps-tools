@@ -5,29 +5,38 @@ TOOLBOX_URL="https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 
-echo "开始下载安装脚本到 $INSTALL_PATH ..."
-curl -fsSL "$TOOLBOX_URL" -o "$INSTALL_PATH"
+# 下载或升级脚本
+if [[ -f "$INSTALL_PATH" ]]; then
+  echo "检测到工具箱脚本已存在，正在升级到最新版本..."
+else
+  echo "开始下载安装脚本到 $INSTALL_PATH ..."
+fi
 
+curl -fsSL "$TOOLBOX_URL" -o "$INSTALL_PATH"
 if [[ $? -ne 0 ]]; then
   echo "下载失败，请检查网络和URL是否正确！"
   exit 1
 fi
-
 chmod +x "$INSTALL_PATH"
-echo "脚本下载完成，设置为可执行。"
+echo "脚本已下载/升级完成，设置为可执行。"
 
 create_shortcut() {
   local shortcut_path="/usr/local/bin/$1"
-  echo "创建快捷指令 $1 ..."
-  sudo bash -c "cat > $shortcut_path <<EOF
+  if [[ -f "$shortcut_path" ]]; then
+    echo "快捷指令 $1 已存在，跳过创建。"
+  else
+    echo "创建快捷指令 $1 ..."
+    sudo bash -c "cat > $shortcut_path <<EOF
 #!/bin/bash
 bash \"$INSTALL_PATH\" \"\$@\"
 EOF"
-  sudo chmod +x "$shortcut_path"
-  echo "快捷指令 $1 创建完成。"
+    sudo chmod +x "$shortcut_path"
+    echo "快捷指令 $1 创建完成。"
+  fi
 }
 
 create_shortcut "m"
 create_shortcut "M"
 
-echo -e "\n安装完成！你可以输入 m 或 M 运行iu工具箱。\n"
+# 红色提示
+echo -e "\n\033[31m安装/升级完成！你可以输入 m 或 M 运行iu工具箱。\033[0m\n"
