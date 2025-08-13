@@ -1,7 +1,7 @@
 #!/bin/bash
 # 流媒体解锁 DNS 快捷切换脚本（无检测）
 
-SCRIPT_URL="https://raw.githubusercontent.com/iu683/vps-tools/main/media_dns.sh"  # 改成你的GitHub脚本地址
+SCRIPT_URL="https://github.com/iu683/vps-tools/blob/main/media_dns.sh"  # 改成你的GitHub脚本地址
 SCRIPT_PATH="$0"
 
 # DNS 列表（顺序固定）
