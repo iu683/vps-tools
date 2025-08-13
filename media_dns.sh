@@ -1,11 +1,10 @@
 #!/bin/bash
 # 流媒体解锁 DNS 快捷切换脚本（无检测）
 
-SCRIPT_URL="https://github.com/iu683/vps-tools/blob/main/media_dns.sh"  # 改成你的GitHub脚本地址
-SCRIPT_PATH="$0"
-
-# DNS 列表（顺序固定）
+# 菜单顺序
 dns_order=("Def" "HK" "JP" "TW" "SG" "US" "UK" "DE" "RFC" "自定义" "更新脚本")
+
+# DNS 列表
 declare -A dns_list=(
   ["Def"]="154.83.83.83"
   ["HK"]="154.83.83.84"
@@ -28,7 +27,7 @@ while true; do
     echo -e "${green}请选择要使用的 DNS 区域（0 返回/退出）：${reset}"
     count=0
     for region in "${dns_order[@]}"; do
-        printf "${green}%-12s${reset}" "[$((++count))] $region"
+        printf "${green}%-14s${reset}" "[$((++count))] $region"
         (( count % 2 == 0 )) && echo ""
     done
     echo -e "\n${green}[0] 返回/退出${reset}\n"
@@ -41,20 +40,15 @@ while true; do
         exit 0
     fi
 
+    # 判断输入
     if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#dns_order[@]} )); then
         region="${dns_order[$((choice-1))]}"
 
         # 更新脚本
         if [[ "$region" == "更新脚本" ]]; then
-            echo -e "${green}正在从远程更新脚本...${reset}"
-            if curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH"; then
-                chmod +x "$SCRIPT_PATH"
-                echo -e "${green}更新完成，正在重新运行脚本...${reset}\n"
-                exec "$SCRIPT_PATH"
-            else
-                echo -e "${green}更新失败，请检查网络或脚本地址。${reset}"
-            fi
-            continue
+            echo -e "${green}正在从远程拉取并运行最新版本...${reset}"
+            bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/media_dns.sh)
+            exit 0
         fi
 
         # 自定义 DNS
