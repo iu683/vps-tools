@@ -25,33 +25,33 @@ show_menu() {
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${green}"
     echo -e "
-  1. 更新源                  2. 更新curl
-  3. 哪吒压缩包              4. 卸载哪吒探针
+  1. 更新源                  2. 安装curl
+  3. 安装解压工具              4. 卸载哪吒探针
   5. v1关SSH                 6. v0关SSH
-  7. DDNS                    8. HY2
+  7. DDNS                    8. Hysteria2
   9. 3XUI                    10. 老王工具箱
  11. 科技lion                12. WARP
- 13. SNELL                   14. 国外EZRealm
- 15. 国内EZRealm             16. V0哪吒
+ 13. Surge-Snell                   14. 国外机EZRealm
+ 15. 国内机EZRealm             16. V0哪吒监控
  17. 一点科技                18. Sub-Store
  19. 宝塔面板                20. 1panel面板
- 21. WEBSSH                  22. 宝塔开心版
+ 21. WebSSH                  22. 宝塔开心版
  23. IP解锁-IPv4             24. IP解锁-IPv6
  25. 网络质量-IPv4           26. 网络质量-IPv6
  27. NodeQuality脚本         28. 本机信息
- 29. DDWin10                 30. Poste.io 邮局
- 31. 服务器优化              32. 流媒体解锁
+ 29. DDwindows10                 30. Poste.io 邮局
+ 31. 服务器优化工具              32. 流媒体解锁
  33. 融合怪测试              34. 安装 Docker Compose
- 35. 3x-ui-alpines           36. 临时禁用IPv6
+ 35. 3XUI-Alpines           36. 临时禁用IPv6
  37. 添加SWAP                38. TCP窗口调优
  39. gost                    40. 极光面板
  41. 安装Python              42. 自定义DNS解锁
  43. Docker备份和恢复        44. Docker容器迁移
- 45. VPS Toolkit             46. NGINX反代
+ 45. VPS-Toolkit             46. NGINX反代
  47. OpenList                48. 哆啦A梦转发面板
- 49. 国外三网测速            50. 国内三网测速
- 51. 国外三网延迟测试        52. 国内三网延迟测试
- 88. VPS 管理                99. 卸载工具箱
+ 49. 国外机三网测速            50. 国内机三网测速
+ 51. 国外机三网延迟测试        52. 国内机三网延迟测试
+ 88. VPS管理                99. 卸载工具箱
   0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
