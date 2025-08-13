@@ -3,6 +3,9 @@
 # 颜色定义
 white="\033[37m"
 purple="\033[35m"
+green="\033[32m"
+yellow="\033[33m"
+red="\033[31m"
 re="\033[0m"
 
 # ASCII VPS Logo
@@ -12,9 +15,9 @@ printf -- "| |  / // __ \\ / ___/ \n"
 printf -- "| | / // /_/ / \\__ \\  \n"
 printf -- "| |/ // ____/ ___/ /  \n"
 printf -- "|___//_/     /____/   \n"
-printf -- "${re}"
+printf -- "${re}\n"
 
-# 安装依赖函数，支持多包管理器
+# 安装依赖函数
 install_deps(){
   if command -v apt >/dev/null 2>&1; then
     apt update -y
@@ -31,7 +34,7 @@ install_deps(){
 }
 install_deps
 
-# 获取公网IP，超时则提示无法获取
+# 获取公网IP
 ipv4_address=$(curl -s --max-time 5 ipv4.icanhazip.com)
 ipv4_address=${ipv4_address:-无法获取}
 ipv6_address=$(curl -s --max-time 5 ipv6.icanhazip.com)
@@ -39,7 +42,7 @@ ipv6_address=${ipv6_address:-无法获取}
 
 clear
 
-# CPU型号
+# CPU 信息
 get_cpu_info(){
   if grep -q 'model name' /proc/cpuinfo 2>/dev/null; then
     grep 'model name' /proc/cpuinfo | head -1 | sed -r 's/model name\s*:\s*//'
@@ -51,21 +54,16 @@ get_cpu_info(){
 }
 cpu_info=$(get_cpu_info)
 
-# CPU占用率，通用计算法：从/proc/stat两次采样计算
 get_cpu_usage(){
   local cpu1=($(head -n1 /proc/stat))
   local idle1=${cpu1[4]}
   local total1=0
-  for val in "${cpu1[@]:1}"; do
-    total1=$((total1 + val))
-  done
+  for val in "${cpu1[@]:1}"; do total1=$((total1 + val)); done
   sleep 1
   local cpu2=($(head -n1 /proc/stat))
   local idle2=${cpu2[4]}
   local total2=0
-  for val in "${cpu2[@]:1}"; do
-    total2=$((total2 + val))
-  done
+  for val in "${cpu2[@]:1}"; do total2=$((total2 + val)); done
   local idle_diff=$((idle2 - idle1))
   local total_diff=$((total2 - total1))
   local usage=0
@@ -75,10 +73,9 @@ get_cpu_usage(){
   echo "${usage}.00%"
 }
 cpu_usage_percent=$(get_cpu_usage)
-
 cpu_cores=$(nproc)
 
-# 内存与硬盘信息
+# 内存与硬盘
 mem_info=$(free -m | awk 'NR==2{printf "%.2f/%.2f MB (%.2f%%)", $3/1024, $2/1024, $3*100/$2}')
 disk_info=$(df -h / | awk 'NR==2{printf "%d/%dGB (%s)", $3,$2,$5}')
 
@@ -97,7 +94,7 @@ kernel_version=$(uname -r)
 congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null || echo "未知")
 queue_algorithm=$(sysctl -n net.core.default_qdisc 2>/dev/null || echo "未知")
 
-# OS信息获取
+# OS信息
 get_os_info(){
   if command -v lsb_release >/dev/null 2>&1; then
     lsb_release -ds
@@ -126,26 +123,22 @@ format_bytes(){
   echo "$bytes ${units[i]}"
 }
 
-# 网络流量统计，排除lo和docker等接口
 get_net_traffic(){
   local rx_total=0
   local tx_total=0
   while read -r line; do
     iface=$(echo "$line" | awk -F: '{print $1}' | tr -d ' ')
-    if [[ "$iface" == "lo" ]] || [[ "$iface" == docker* ]] || [[ "$iface" == veth* ]]; then
-      continue
-    fi
+    if [[ "$iface" == "lo" ]] || [[ "$iface" == docker* ]] || [[ "$iface" == veth* ]]; then continue; fi
     rx=$(echo "$line" | awk '{print $2}')
     tx=$(echo "$line" | awk '{print $10}')
     rx_total=$((rx_total + rx))
     tx_total=$((tx_total + tx))
   done < <(tail -n +3 /proc/net/dev)
-
   rx_formatted=$(format_bytes $rx_total)
   tx_formatted=$(format_bytes $tx_total)
-  printf -- "总接收: %s\n总发送: %s\n" "$rx_formatted" "$tx_formatted"
+  echo "$rx_formatted / $tx_formatted"
 }
-output=$(get_net_traffic)
+net_traffic=$(get_net_traffic)
 
 # 时间与运行时长
 current_time=$(date "+%Y-%m-%d %I:%M %p")
@@ -159,33 +152,31 @@ else
 fi
 runtime=$(awk -F. '{run_days=int($1/86400); run_hours=int(($1%86400)/3600); run_minutes=int(($1%3600)/60); if(run_days>0) printf("%d天 ",run_days); if(run_hours>0) printf("%d时 ",run_hours); printf("%d分\n",run_minutes)}' /proc/uptime)
 
-# 输出，全部printf加--参数
+# 输出双列表格
+print_row(){
+  local label=$1
+  local value=$2
+  printf -- "%-20b: %b\n" "$label" "$value"
+}
+
 printf -- "%b系统信息详情%b\n" "$white" "$re"
-printf -- "------------------------\n"
-printf -- "%b主机名: %b%s%b\n" "$white" "$purple" "$hostname" "$re"
-printf -- "%b运营商: %b%s%b\n" "$white" "$purple" "$isp_info" "$re"
-printf -- "------------------------\n"
-printf -- "%b系统版本: %b%s%b\n" "$white" "$purple" "$os_info" "$re"
-printf -- "%bLinux版本: %b%s%b\n" "$white" "$purple" "$kernel_version" "$re"
-printf -- "------------------------\n"
-printf -- "%bCPU架构: %b%s%b\n" "$white" "$purple" "$cpu_arch" "$re"
-printf -- "%bCPU型号: %b%s%b\n" "$white" "$purple" "$cpu_info" "$re"
-printf -- "%bCPU核心数: %b%s%b\n" "$white" "$purple" "$cpu_cores" "$re"
-printf -- "------------------------\n"
-printf -- "%bCPU占用: %b%s%b\n" "$white" "$purple" "$cpu_usage_percent" "$re"
-printf -- "%b物理内存: %b%s%b\n" "$white" "$purple" "$mem_info" "$re"
-printf -- "%b虚拟内存: %b%s%b\n" "$white" "$purple" "$swap_info" "$re"
-printf -- "%b硬盘占用: %b%s%b\n" "$white" "$purple" "$disk_info" "$re"
-printf -- "------------------------\n"
-printf -- "%b%s%b\n" "$purple" "$output" "$re"
-printf -- "------------------------\n"
-printf -- "%b网络拥堵算法: %b%s %s%b\n" "$white" "$purple" "$congestion_algorithm" "$queue_algorithm" "$re"
-printf -- "------------------------\n"
-printf -- "%b公网IPv4地址: %b%s%b\n" "$white" "$purple" "$ipv4_address" "$re"
-printf -- "%b公网IPv6地址: %b%s%b\n" "$white" "$purple" "$ipv6_address" "$re"
-printf -- "------------------------\n"
-printf -- "%b地理位置: %b%s %s%b\n" "$white" "$purple" "$country" "$city" "$re"
-printf -- "%b系统时间: %b%s%b\n" "$white" "$purple" "$current_time" "$re"
-printf -- "------------------------\n"
-printf -- "%b系统运行时长: %b%s%b\n" "$white" "$purple" "$runtime" "$re"
-printf -- "\n"
+printf -- "----------------------------------------\n"
+print_row "主机名" "${purple}$hostname${re}"
+print_row "运营商" "${purple}$isp_info${re}"
+print_row "系统版本" "${purple}$os_info${re}"
+print_row "Linux内核" "${purple}$kernel_version${re}"
+print_row "CPU架构" "${purple}$cpu_arch${re}"
+print_row "CPU型号" "${purple}$cpu_info${re}"
+print_row "CPU核心数" "${purple}$cpu_cores${re}"
+print_row "CPU占用" "${green}$cpu_usage_percent${re}"
+print_row "物理内存" "${green}$mem_info${re}"
+print_row "虚拟内存" "${yellow}$swap_info${re}"
+print_row "硬盘占用" "${green}$disk_info${re}"
+print_row "网络流量" "${green}$net_traffic${re}"
+print_row "TCP拥堵/队列算法" "${purple}$congestion_algorithm / $queue_algorithm${re}"
+print_row "公网IPv4" "${purple}$ipv4_address${re}"
+print_row "公网IPv6" "${purple}$ipv6_address${re}"
+print_row "地理位置" "${purple}$country $city${re}"
+print_row "系统时间" "${yellow}$current_time${re}"
+print_row "运行时长" "${yellow}$runtime${re}"
+printf -- "----------------------------------------\n"
