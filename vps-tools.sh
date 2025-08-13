@@ -51,7 +51,8 @@ show_menu() {
  47. OpenList                48. 哆啦A梦转发面板
  49. 国外三网测速            50. 国内三网测速
  51. 国外三网延迟测试        52. 国内三网延迟测试
- 99. 卸载工具箱              0. 退出
+ 88. VPS 管理                99. 卸载工具箱
+  0. 退出
 "
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${reset}"
@@ -127,6 +128,11 @@ execute_choice() {
         50) bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-net.sh) ;;
         51) bash <(wget -qO- bash.spiritlhl.net/ecs-ping) ;;
         52) bash <(wget -qO- --no-check-certificate https://cdn.spiritlhl.net/https://raw.githubusercontent.com/spiritLHLS/ecsspeed/main/script/ecsspeed-ping.sh) ;;
+        88)
+            curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-control.sh -o vps-control.sh
+            chmod +x vps-control.sh
+            ./vps-control.sh
+            ;;
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
@@ -134,7 +140,10 @@ execute_choice() {
             echo "卸载完成"
             exit 0
             ;;
-        0) echo "退出" ; exit 0 ;;
+        0)
+            echo "退出"
+            exit 0
+            ;;
         *)
             echo "无效选项"
             ;;
