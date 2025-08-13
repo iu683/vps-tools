@@ -9,4 +9,4 @@
 使用以下命令一键下载安装脚本：
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/csyad/vps-toolbox/main/iinstall.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/install.sh)
