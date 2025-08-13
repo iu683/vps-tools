@@ -1,7 +1,8 @@
 #!/bin/bash
 
-INSTALL_PATH="$HOME/vps-toolbox.sh"
+INSTALL_PATH="$HOME/vps-tools.sh"
 SHORTCUT_PATH="/usr/local/bin/m"
+SHORTCUT_PATH_UPPER="/usr/local/bin/M"
 
 green="\033[32m"
 reset="\033[0m"
@@ -24,54 +25,58 @@ show_menu() {
     rainbow_border "    📦 服务器工具箱 📦"
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${green}"
-    echo -e "
-  1. 更新源                  2. 安装curl
-  3. 安装解压工具              4. 卸载哪吒探针
-  5. v1关SSH                 6. v0关SSH
-  7. DDNS                    8. Hysteria2
-  9. 3XUI                    10. 老王工具箱
+    cat <<'EOF'
+  1.  更新源                  2.  安装curl
+  3.  安装解压工具             4.  卸载哪吒探针
+  5.  v1关SSH                 6.  v0关SSH
+  7.  DDNS                    8.  Hysteria2
+  9.  3XUI                    10. 老王工具箱
  11. 科技lion                12. WARP
- 13. Surge-Snell                   14. 国外机EZRealm
- 15. 国内机EZRealm             16. V0哪吒监控
+ 13. Surge-Snell             14. 国外机EZRealm
+ 15. 国内机EZRealm            16. V0哪吒监控
  17. 一点科技                18. Sub-Store
  19. 宝塔面板                20. 1panel面板
  21. WebSSH                  22. 宝塔开心版
  23. IP解锁-IPv4             24. IP解锁-IPv6
  25. 网络质量-IPv4           26. 网络质量-IPv6
  27. NodeQuality脚本         28. 本机信息
- 29. DDwindows10                 30. Poste.io 邮局
- 31. 服务器优化工具              32. 流媒体解锁
- 33. 融合怪测试              34. 安装 Docker Compose
- 35. 3XUI-Alpines           36. 临时禁用IPv6
+ 29. DDwindows10             30. Poste.io 邮局
+ 31. 服务器优化工具           32. 流媒体解锁
+ 33. 融合怪测试               34. 安装 Docker Compose
+ 35. 3XUI-Alpines            36. 临时禁用IPv6
  37. 添加SWAP                38. TCP窗口调优
  39. gost                    40. 极光面板
  41. 安装Python              42. 自定义DNS解锁
- 43. Docker备份和恢复        44. Docker容器迁移
+ 43. Docker备份和恢复         44. Docker容器迁移
  45. VPS-Toolkit             46. NGINX反代
  47. OpenList                48. 哆啦A梦转发面板
- 49. 国外机三网测速            50. 国内机三网测速
- 51. 国外机三网延迟测试        52. 国内机三网延迟测试
- 88. VPS管理                99. 卸载工具箱
-  0. 退出
-"
+ 49. 国外机三网测速           50. 国内机三网测速
+ 51. 国外机三网延迟测试       52. 国内机三网延迟测试
+ 88. VPS管理                 89. 更新脚本
+ 99. 卸载工具箱               0.  退出
+EOF
     rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo -e "${reset}"
 }
 
 install_shortcut() {
-    echo "创建快捷指令 m"
+    echo "创建快捷指令 m 和 M"
     local script_path
     script_path=$(realpath "$0")
-    echo "#!/bin/bash" | sudo tee "$SHORTCUT_PATH" >/dev/null
-    echo "bash \"$script_path\"" | sudo tee -a "$SHORTCUT_PATH" >/dev/null
-    sudo chmod +x "$SHORTCUT_PATH"
+    for path in "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"; do
+        echo "#!/bin/bash" | sudo tee "$path" >/dev/null
+        echo "bash \"$script_path\"" | sudo tee -a "$path" >/dev/null
+        sudo chmod +x "$path"
+    done
 }
 
 remove_shortcut() {
-    if [ -f "$SHORTCUT_PATH" ]; then
-        echo "删除快捷指令 m"
-        sudo rm -f "$SHORTCUT_PATH"
-    fi
+    for path in "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"; do
+        if [ -f "$path" ]; then
+            echo "删除快捷指令 $(basename "$path")"
+            sudo rm -f "$path"
+        fi
+    done
 }
 
 execute_choice() {
@@ -133,6 +138,13 @@ execute_choice() {
             chmod +x vps-control.sh
             ./vps-control.sh
             ;;
+        89)
+            echo "更新脚本..."
+            curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh -o "$INSTALL_PATH"
+            chmod +x "$INSTALL_PATH"
+            echo "更新完成，正在重新运行..."
+            exec bash "$INSTALL_PATH"
+            ;;
         99)
             echo "卸载工具箱..."
             rm -f "$INSTALL_PATH"
@@ -150,13 +162,14 @@ execute_choice() {
     esac
 }
 
+# 首次运行时自动创建快捷指令
+if [ ! -f "$SHORTCUT_PATH" ] || [ ! -f "$SHORTCUT_PATH_UPPER" ]; then
+    install_shortcut
+fi
+
 while true; do
     show_menu
     read -p "请输入选项编号: " choice
     execute_choice "$choice"
     read -p "按回车返回菜单..."
-
-    if [ ! -f "$SHORTCUT_PATH" ]; then
-        install_shortcut
-    fi
 done
