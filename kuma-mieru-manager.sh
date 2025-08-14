@@ -2,7 +2,7 @@
 
 # ================================
 # kuma-mieru 管理脚本（菜单式）
-# 自动显示访问 IP+端口
+# 自动显示访问 IP+端口，配置 .env
 # ================================
 
 # 颜色输出
@@ -39,6 +39,12 @@ install_docker() {
 install_app() {
     install_docker
 
+    # 输入环境变量
+    echo -e "${yellow}请输入 Uptime Kuma 地址 (例如 http://IP:端口):${plain}"
+    read UPTIME_KUMA_BASE_URL
+    echo -e "${yellow}请输入页面 ID:${plain}"
+    read PAGE_ID
+
     # 克隆或更新仓库
     if [ -d "$APP_DIR" ]; then
         echo -e "${yellow}检测到已有项目，拉取最新代码...${plain}"
@@ -50,12 +56,9 @@ install_app() {
     fi
 
     # 配置 .env
-    if [ ! -f .env ]; then
-        cp .env.example .env
-        echo -e "${yellow}请输入页面 ID:${plain}"
-        read PAGE_ID
-        sed -i "s|^PAGE_ID=.*|PAGE_ID=${PAGE_ID}|" .env
-    fi
+    cp -f .env.example .env
+    sed -i "s|^UPTIME_KUMA_BASE_URL=.*|UPTIME_KUMA_BASE_URL=${UPTIME_KUMA_BASE_URL}|" .env
+    sed -i "s|^PAGE_ID=.*|PAGE_ID=${PAGE_ID}|" .env
 
     # 启动服务
     docker compose up -d
