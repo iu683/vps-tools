@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# STB 本地源码一键运行脚本（零环境部署 + 卸载）
+# STB 本地源码一键管理脚本（零环境部署 + Docker MongoDB + 更新 + 卸载）
 # 作者: Linai Li
 # ========================================
 
@@ -16,7 +16,7 @@ MONGO_HOST=${MONGO_URL:-"mongodb://localhost:27017/stb"}
 
 # ================== 菜单 ==================
 function show_menu() {
-    echo -e "${CYAN}================= STB 本地运行管理 =================${RESET}"
+    echo -e "${CYAN}================= STB 管理脚本 =================${RESET}"
     echo -e "${GREEN}1.${RESET} 下载源码"
     echo -e "${GREEN}2.${RESET} 安装 Node.js / pnpm / 项目依赖"
     echo -e "${GREEN}3.${RESET} 编译项目"
@@ -24,10 +24,11 @@ function show_menu() {
     echo -e "${GREEN}5.${RESET} 查看日志"
     echo -e "${GREEN}6.${RESET} 停止项目"
     echo -e "${GREEN}7.${RESET} 检测 MongoDB"
-    echo -e "${GREEN}8.${RESET} 安装 MongoDB (本地或 Docker)"
+    echo -e "${GREEN}8.${RESET} 安装 MongoDB (Docker)"
     echo -e "${GREEN}9.${RESET} 卸载项目及环境"
+    echo -e "${GREEN}10.${RESET} 更新项目"
     echo -e "${GREEN}0.${RESET} 退出"
-    echo -e "${CYAN}================================================${RESET}"
+    echo -e "${CYAN}==============================================${RESET}"
 }
 
 # ================== 功能 ==================
@@ -115,30 +116,10 @@ function stop_project() {
 }
 
 function install_mongo() {
-    echo -e "${YELLOW}请选择安装方式:${RESET}"
-    echo "1) 本地系统安装 MongoDB (适用于 Debian/Ubuntu)"
-    echo "2) 使用 Docker 安装 MongoDB"
-    read -p "请输入选项 [1-2]: " opt
-
-    case $opt in
-        1)
-            echo -e "${GREEN}开始本地安装 MongoDB...${RESET}"
-            sudo apt update
-            sudo apt install -y mongodb
-            sudo systemctl enable mongodb
-            sudo systemctl start mongodb
-            echo -e "${GREEN}MongoDB 已启动${RESET}"
-            ;;
-        2)
-            echo -e "${GREEN}使用 Docker 安装 MongoDB...${RESET}"
-            docker pull mongo:6
-            docker run -d --name stb-mongo -p 27017:27017 mongo:6
-            echo -e "${GREEN}MongoDB Docker 容器已启动，端口 27017${RESET}"
-            ;;
-        *)
-            echo -e "${RED}无效选项${RESET}"
-            ;;
-    esac
+    echo -e "${YELLOW}使用 Docker 安装 MongoDB...${RESET}"
+    docker pull mongo:6
+    docker run -d --name stb-mongo -p 27017:27017 mongo:6
+    echo -e "${GREEN}MongoDB Docker 容器已启动，端口 27017${RESET}"
 }
 
 function uninstall_all() {
@@ -149,16 +130,11 @@ function uninstall_all() {
     rm -rf $APP_DIR
     echo -e "${GREEN}STB 项目目录已删除${RESET}"
 
-    echo -e "${YELLOW}删除本地 MongoDB 或 Docker 容器...${RESET}"
+    echo -e "${YELLOW}删除 MongoDB Docker 容器...${RESET}"
     if docker ps -a | grep stb-mongo >/dev/null; then
         docker stop stb-mongo
         docker rm stb-mongo
         echo -e "${GREEN}MongoDB Docker 容器已删除${RESET}"
-    else
-        sudo systemctl stop mongodb 2>/dev/null
-        sudo apt purge -y mongodb
-        sudo apt autoremove -y
-        echo -e "${GREEN}本地 MongoDB 已删除${RESET}"
     fi
 
     echo -e "${YELLOW}可选: 卸载 Node.js 和 pnpm? (y/N)${RESET}"
@@ -171,6 +147,34 @@ function uninstall_all() {
     fi
 
     echo -e "${GREEN}卸载完成${RESET}"
+}
+
+function update_project() {
+    echo -e "${YELLOW}停止项目以便更新...${RESET}"
+    stop_project
+
+    if [ -d "$APP_DIR" ]; then
+        echo -e "${GREEN}进入项目目录更新源码...${RESET}"
+        cd $APP_DIR || exit
+        git fetch --all
+        git reset --hard origin/main
+        cd ..
+    else
+        echo -e "${RED}项目目录不存在，先下载源码${RESET}"
+        clone_repo
+    fi
+
+    echo -e "${GREEN}更新依赖并编译...${RESET}"
+    cd $APP_DIR || exit
+    pnpm install
+    pnpm build
+    cd ..
+
+    echo -e "${YELLOW}更新完成。是否立即启动项目? (y/N)${RESET}"
+    read -p "请输入: " yn
+    if [[ "$yn" == "y" || "$yn" == "Y" ]]; then
+        start_project
+    fi
 }
 
 # ================== 主循环 ==================
@@ -187,6 +191,7 @@ while true; do
         7) check_mongo ;;
         8) install_mongo ;;
         9) uninstall_all ;;
+        10) update_project ;;
         0) echo -e "${GREEN}退出脚本${RESET}"; exit 0 ;;
         *) echo -e "${RED}无效选项，请重新输入${RESET}" ;;
     esac
