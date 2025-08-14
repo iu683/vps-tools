@@ -86,11 +86,14 @@ change_password() {
     echo -e "${YELLOW}请输入新账号:${RESET}"
     read NEW_USER
     echo -e "${YELLOW}请输入新密码:${RESET}"
-    read NEW_PASS
+    read -s NEW_PASS
 
-    echo -e "${GREEN}正在修改容器内配置...${RESET}"
-    docker exec -it $APP_NAME sed -i "s/^username:.*/username: $NEW_USER/" /app/oci-helper/application.yml
-    docker exec -it $APP_NAME sed -i "s/^password:.*/password: $NEW_PASS/" /app/oci-helper/application.yml
+    DB_PATH="/app/oci-helper/oci-helper.db"
+    HASH_PASS=$(echo -n "$NEW_PASS" | sha256sum | awk '{print $1}')
+
+    echo -e "${GREEN}正在修改数据库内账号密码...${RESET}"
+    docker exec -i $APP_NAME sqlite3 $DB_PATH "UPDATE users SET username='$NEW_USER', password='$HASH_PASS' WHERE id=1;"
+
     docker restart $APP_NAME
     echo -e "${CYAN}修改完成！请使用新账号密码登录。${RESET}"
 }
