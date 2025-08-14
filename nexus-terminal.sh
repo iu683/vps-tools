@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================
-# Nexus Terminal 一键管理脚本
+# Nexus Terminal 一键管理脚本（自动检查配置文件）
 # ========================================
 
 # 颜色定义
@@ -15,18 +15,33 @@ RESET="\033[0m"
 # 工作目录
 WORKDIR="$HOME/nexus-terminal"
 
-# 检查工作目录
+# 创建工作目录（如果不存在）
 if [ ! -d "$WORKDIR" ]; then
     mkdir -p "$WORKDIR"
-    cd "$WORKDIR" || exit
     echo -e "${GREEN}已创建工作目录：$WORKDIR${RESET}"
-
-    # 下载 docker-compose 文件和 .env
-    wget https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/docker-compose.yml -O docker-compose.yml
-    wget https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/.env -O .env
 fi
 
 cd "$WORKDIR" || exit
+
+# 检查 docker-compose.yml 是否存在，不存在就下载
+if [ ! -f "docker-compose.yml" ]; then
+    echo -e "${BLUE}docker-compose.yml 文件不存在，正在下载...${RESET}"
+    wget -q https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/docker-compose.yml -O docker-compose.yml
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}docker-compose.yml 下载失败，请检查网络${RESET}"
+        exit 1
+    fi
+fi
+
+# 检查 .env 文件是否存在，不存在就下载
+if [ ! -f ".env" ]; then
+    echo -e "${BLUE}.env 文件不存在，正在下载...${RESET}"
+    wget -q https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/.env -O .env
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}.env 下载失败，请检查网络${RESET}"
+        exit 1
+    fi
+fi
 
 # 菜单函数
 show_menu() {
@@ -35,13 +50,15 @@ show_menu() {
     echo -e "${YELLOW}2.${RESET} 停止服务"
     echo -e "${YELLOW}3.${RESET} 更新服务"
     echo -e "${YELLOW}4.${RESET} 查看日志"
-    echo -e "${YELLOW}5.${RESET} 退出"
+    echo -e "${YELLOW}5.${RESET} 卸载服务"
+    echo -e "${YELLOW}6.${RESET} 退出"
     echo -e "${CYAN}======================================================${RESET}"
 }
 
+# 菜单循环
 while true; do
     show_menu
-    read -rp "请选择操作 [1-5]: " choice
+    read -rp "请选择操作 [1-6]: " choice
     case $choice in
         1)
             echo -e "${GREEN}启动服务中...${RESET}"
@@ -65,6 +82,19 @@ while true; do
             docker compose logs -f
             ;;
         5)
+            read -rp "确认卸载服务并删除所有数据吗？[y/N]: " confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                echo -e "${RED}卸载中...${RESET}"
+                docker compose down --rmi all --volumes --remove-orphans
+                cd "$HOME" || exit
+                rm -rf "$WORKDIR"
+                echo -e "${GREEN}服务已卸载，工作目录已删除${RESET}"
+                exit 0
+            else
+                echo -e "${YELLOW}取消卸载${RESET}"
+            fi
+            ;;
+        6)
             echo -e "${YELLOW}退出脚本${RESET}"
             exit 0
             ;;
