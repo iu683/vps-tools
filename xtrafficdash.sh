@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# xTrafficDash 一键部署 & 管理脚本（增强版）
+# xTrafficDash 一键部署 & 管理脚本（最终版）
 # 作者: Linai Li
 # ========================================
 
@@ -36,6 +36,14 @@ create_data_dir() {
     fi
 }
 
+show_access_url() {
+    HOST_IP=$(curl -s https://api.ipify.org)
+    if [ -z "$HOST_IP" ]; then
+        HOST_IP="本地IP或域名"
+    fi
+    echo -e "${GREEN}访问地址: http://${HOST_IP}:$PORT${RESET}"
+}
+
 start_container() {
     create_data_dir
     if [ "$(docker ps -aq -f name=$APP_NAME)" ]; then
@@ -56,6 +64,7 @@ start_container() {
     fi
     echo -e "${GREEN}容器状态:${RESET}"
     docker ps -f name=$APP_NAME
+    show_access_url
 }
 
 stop_container() {
