@@ -44,6 +44,16 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
+# 获取公网 IP 函数
+get_public_ip() {
+    IP=$(curl -s https://ifconfig.me)
+    # 如果不是 IPv4 格式，则显示 "服务器IP"
+    if ! [[ $IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        IP="服务器IP"
+    fi
+    echo "$IP"
+}
+
 # 菜单函数
 show_menu() {
     echo -e "${CYAN}================ Nexus Terminal 管理菜单 ================${RESET}"
@@ -66,9 +76,8 @@ while true; do
             docker compose up -d
             echo -e "${GREEN}服务已启动${RESET}"
 
-            # 获取公网 IP
-            IP=$(curl -s https://api.ip.sb/ip)
-            [ -z "$IP" ] && IP="服务器IP"
+            # 获取公网 IP 并显示访问地址
+            IP=$(get_public_ip)
             PORT=18111  # 固定端口
             echo -e "${GREEN}访问地址：http://$IP:$PORT${RESET}"
             ;;
@@ -84,10 +93,9 @@ while true; do
             docker compose up -d
             echo -e "${GREEN}服务已更新并启动${RESET}"
 
-            # 获取公网 IP
-            IP=$(curl -s https://api.ip.sb/ip)
-            [ -z "$IP" ] && IP="服务器IP"
-            PORT=18111  # 固定端口
+            # 获取公网 IP 并显示访问地址
+            IP=$(get_public_ip)
+            PORT=18111
             echo -e "${GREEN}访问地址：http://$IP:$PORT${RESET}"
             ;;
         4)
