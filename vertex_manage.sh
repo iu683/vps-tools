@@ -1,7 +1,7 @@
 #!/bin/bash
 # ========================================
-# Vertex 一键管理脚本（增强版）
-# 支持查看初始密码（从文件或容器读取）
+# Vertex 一键管理脚本（最终简化版）
+# 菜单选项 8 直接显示密码
 # 作者：Linai Li
 # ========================================
 
@@ -81,20 +81,9 @@ uninstall_vertex() {
     echo -e "${GREEN}Vertex 已卸载${RESET}"
 }
 
-# 查看初始密码（优先文件，文件不存在则从容器读取）
+# 查看初始密码（直接用 more 显示）
 show_password() {
-    PASS_FILE="${DATA_DIR}/password"
-    if [ -f "$PASS_FILE" ]; then
-        echo -e "${CYAN}Vertex 默认用户名: admin${RESET}"
-        echo -e "${YELLOW}初始密码: $(cat "$PASS_FILE")${RESET}"
-    elif docker ps -a --format '{{.Names}}' | grep -q "^${APP_NAME}$"; then
-        echo -e "${CYAN}Vertex 默认用户名: admin${RESET}"
-        echo -e "${YELLOW}初始密码: $(docker exec "${APP_NAME}" cat /vertex/password 2>/dev/null)${RESET}"
-    else
-        echo -e "${RED}未找到密码文件，也没有运行的容器，请先部署 Vertex${RESET}"
-        return
-    fi
-    echo -e "${RED}⚠️  请复制密码并在登录后尽快修改账号和密码！${RESET}"
+    more /root/vertex/data/password
 }
 
 # 菜单
