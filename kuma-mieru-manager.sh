@@ -1,8 +1,8 @@
-
 #!/bin/bash
 
 # ================================
 # kuma-mieru 管理脚本（菜单式）
+# 自动显示访问 IP+端口
 # ================================
 
 # 颜色输出
@@ -13,6 +13,8 @@ plain="\033[0m"
 
 # 项目目录
 APP_DIR="$HOME/kuma-mieru"
+# 默认宿主机端口（映射 docker-compose.yml 的端口）
+HOST_PORT=3883
 
 # 检查 root
 if [ "$(id -u)" != "0" ]; then
@@ -37,11 +39,6 @@ install_docker() {
 install_app() {
     install_docker
 
-    echo -e "${yellow}请输入 Uptime Kuma 地址:${plain}"
-    read UPTIME_KUMA_BASE_URL
-    echo -e "${yellow}请输入页面 ID:${plain}"
-    read PAGE_ID
-
     # 克隆或更新仓库
     if [ -d "$APP_DIR" ]; then
         echo -e "${yellow}检测到已有项目，拉取最新代码...${plain}"
@@ -53,13 +50,19 @@ install_app() {
     fi
 
     # 配置 .env
-    cp -f .env.example .env
-    sed -i "s|^UPTIME_KUMA_BASE_URL=.*|UPTIME_KUMA_BASE_URL=${UPTIME_KUMA_BASE_URL}|" .env
-    sed -i "s|^PAGE_ID=.*|PAGE_ID=${PAGE_ID}|" .env
+    if [ ! -f .env ]; then
+        cp .env.example .env
+        echo -e "${yellow}请输入页面 ID:${plain}"
+        read PAGE_ID
+        sed -i "s|^PAGE_ID=.*|PAGE_ID=${PAGE_ID}|" .env
+    fi
 
     # 启动服务
     docker compose up -d
-    echo -e "${green}部署完成！访问地址：${UPTIME_KUMA_BASE_URL}${plain}"
+
+    # 获取服务器 IP
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+    echo -e "${green}部署完成！访问地址: http://${SERVER_IP}:${HOST_PORT}${plain}"
 }
 
 # 更新服务
@@ -73,7 +76,9 @@ update_app() {
     git pull
     docker compose pull
     docker compose up -d
-    echo -e "${green}更新完成！${plain}"
+
+    SERVER_IP=$(hostname -I | awk '{print $1}')
+    echo -e "${green}更新完成！访问地址: http://${SERVER_IP}:${HOST_PORT}${plain}"
 }
 
 # 卸载服务
