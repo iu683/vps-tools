@@ -1,6 +1,7 @@
 #!/bin/bash
 # ========================================
-# Foxel Docker 管理脚本
+# Foxel Docker 管理脚本（增强版）
+# 默认 WebUI 端口 8088
 # 作者：Linai Li
 # ========================================
 
@@ -15,6 +16,9 @@ BASE_DIR="$PWD"
 UPLOADS_DIR="${BASE_DIR}/uploads"
 DB_DIR="${BASE_DIR}/db"
 COMPOSE_FILE="${BASE_DIR}/compose.yaml"
+
+# 默认 WebUI 端口
+WEB_PORT=8088
 
 # 一键部署
 deploy_foxel() {
@@ -31,14 +35,14 @@ deploy_foxel() {
     echo -e "${YELLOW}启动所有容器...${RESET}"
     docker compose up -d
 
-    echo -e "${GREEN}Foxel Docker 已部署完成！${RESET}"
-    docker compose ps
+    show_access_info
 }
 
 # 启动容器
 start_foxel() {
     docker compose start
     echo -e "${GREEN}Foxel 容器已启动${RESET}"
+    show_access_info
 }
 
 # 停止容器
@@ -51,6 +55,7 @@ stop_foxel() {
 restart_foxel() {
     docker compose restart
     echo -e "${GREEN}Foxel 容器已重启${RESET}"
+    show_access_info
 }
 
 # 查看日志
@@ -70,6 +75,21 @@ uninstall_foxel() {
     echo -e "${GREEN}Foxel Docker 已卸载${RESET}"
 }
 
+# 更新容器镜像
+update_foxel() {
+    echo -e "${YELLOW}拉取最新镜像并重建容器...${RESET}"
+    docker compose pull
+    docker compose up -d --remove-orphans
+    echo -e "${GREEN}Foxel 已更新到最新镜像并重启${RESET}"
+    show_access_info
+}
+
+# 显示 WebUI 访问地址
+show_access_info() {
+    IP=$(hostname -I | awk '{print $1}')
+    echo -e "${CYAN}Foxel WebUI 访问地址: http://${IP}:${WEB_PORT}${RESET}"
+}
+
 # 菜单
 menu() {
     clear
@@ -80,6 +100,7 @@ menu() {
     echo -e "4. 重启容器"
     echo -e "5. 查看日志"
     echo -e "6. 卸载容器"
+    echo -e "7. 更新容器镜像"
     echo -e "0. 退出"
     echo -ne "${YELLOW}请输入选项: ${RESET}"
     read -r choice
@@ -90,6 +111,7 @@ menu() {
         4) restart_foxel ;;
         5) logs_foxel ;;
         6) uninstall_foxel ;;
+        7) update_foxel ;;
         0) exit 0 ;;
         *) echo -e "${RED}无效选项${RESET}" ;;
     esac
