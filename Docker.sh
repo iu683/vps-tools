@@ -1,66 +1,39 @@
 #!/bin/bash
-# VPS Docker 完整管理脚本（含 IPv6、端口管理、iptables 自动保存、镜像管理）
+# VPS Docker 管理脚本（自动检测国内/国外源 + 安装/更新/卸载/容器/镜像/IPv6/iptables/crontab）
 
-# ================== 颜色 ==================
-gl_huang="\033[33m"
-gl_lv="\033[32m"
-gl_hong="\033[31m"
-gl_bai="\033[0m"
+RED="\033[31m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+RESET="\033[0m"
 
-# ================== 工具函数 ==================
 root_use() {
-    if [ "$(id -u)" -ne 0 ]; then
-        echo -e "${gl_hong}请使用 root 用户运行脚本${gl_bai}"
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}请使用 root 用户运行脚本${RESET}"
         exit 1
     fi
 }
 
-sync_system_time() {
-    if command -v ntpdate &>/dev/null; then
-        ntpdate time.windows.com >/dev/null 2>&1
-    fi
-}
-
-systemctl_enable_start() {
-    if command -v systemctl &>/dev/null; then
-        systemctl enable docker >/dev/null 2>&1
-        systemctl restart docker >/dev/null 2>&1
+# ================== 自动检测国内/国外 ==================
+detect_country() {
+    local country=$(curl -s --max-time 5 ipinfo.io/country)
+    if [[ "$country" == "CN" ]]; then
+        echo "CN"
     else
-        service docker restart >/dev/null 2>&1
+        echo "OTHER"
     fi
 }
 
-docker_cleanup() {
-    if command -v docker &>/dev/null; then
-        echo -e "${gl_lv}检测到已安装 Docker，卸载旧版本...${gl_bai}"
-        apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
-        yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine containerd.io 2>/dev/null || true
-    fi
-}
-
-install_jq() {
-    command -v jq &>/dev/null || {
-        if command -v apt &>/dev/null; then
-            apt update && apt install -y jq
-        elif command -v yum &>/dev/null; then
-            yum install -y jq
-        fi
-    }
-}
-
-# ================== Docker 安装/更新 ==================
-docker_official_install() {
+# ================== 安装 Docker ==================
+docker_install() {
     root_use
-    docker_cleanup
-    sync_system_time
-    echo -e "${gl_huang}正在通过官方脚本安装 Docker...${gl_bai}"
-    curl -fsSL https://get.docker.com | sh
-
-    local country=$(curl -s ipinfo.io/country)
+    local country=$(detect_country)
+    echo "检测到国家: $country"
     if [ "$country" = "CN" ]; then
-        echo -e "${gl_lv}检测到中国大陆，配置国内加速源${gl_bai}"
+        echo -e "${YELLOW}使用国内加速安装 Docker...${RESET}"
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sh get-docker.sh
         mkdir -p /etc/docker
-        cat > /etc/docker/daemon.json << EOF
+        tee /etc/docker/daemon.json > /dev/null << EOF
 {
   "registry-mirrors": [
     "https://docker.0.unsee.tech",
@@ -71,230 +44,222 @@ docker_official_install() {
 }
 EOF
     else
-        echo -e "${gl_lv}检测到非中国大陆，使用官方默认源${gl_bai}"
+        echo -e "${YELLOW}使用官方源安装 Docker...${RESET}"
+        curl -fsSL https://get.docker.com | sh
     fi
 
-    systemctl_enable_start
-
-    if [ "$(docker ps -a -q | wc -l)" -gt 0 ]; then
-        echo -e "${gl_lv}正在启动已有容器...${gl_bai}"
-        docker start $(docker ps -a -q)
+    if systemctl list-unit-files | grep -q "^docker.service"; then
+        systemctl enable docker
+        systemctl start docker
+    else
+        dockerd >/dev/null 2>&1 &
+        sleep 5
     fi
-
-    echo -e "${gl_lv}Docker 安装完成并启动所有容器${gl_bai}"
+    echo -e "${GREEN}Docker 安装完成${RESET}"
 }
 
 docker_update() {
     root_use
-    echo -e "${gl_huang}正在更新 Docker...${gl_bai}"
-    sync_system_time
-    curl -fsSL https://get.docker.com | sh
-
-    local country=$(curl -s ipinfo.io/country)
-    if [ "$country" = "CN" ]; then
-        echo -e "${gl_lv}检测到中国大陆，重新配置国内加速源${gl_bai}"
-        mkdir -p /etc/docker
-        cat > /etc/docker/daemon.json << EOF
-{
-  "registry-mirrors": [
-    "https://docker.0.unsee.tech",
-    "https://docker.1panel.live",
-    "https://registry.dockermirror.com",
-    "https://docker.m.daocloud.io"
-  ]
-}
-EOF
+    echo -e "${YELLOW}正在更新 Docker...${RESET}"
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+    if systemctl list-unit-files | grep -q "^docker.service"; then
+        systemctl restart docker
+    else
+        pkill dockerd
+        dockerd >/dev/null 2>&1 &
+        sleep 5
     fi
-
-    systemctl_enable_start
-
-    if [ "$(docker ps -a -q | wc -l)" -gt 0 ]; then
-        echo -e "${gl_lv}正在启动已有容器...${gl_bai}"
-        docker start $(docker ps -a -q)
-    fi
-
-    echo -e "${gl_lv}Docker 更新完成并启动所有容器${gl_bai}"
+    echo -e "${GREEN}Docker 更新完成${RESET}"
 }
 
 docker_uninstall() {
     root_use
-    echo -e "${gl_hong}卸载 Docker...${gl_bai}"
-    systemctl stop docker >/dev/null 2>&1
+    echo -e "${RED}正在卸载 Docker...${RESET}"
+    systemctl stop docker 2>/dev/null
+    systemctl disable docker 2>/dev/null
+    pkill dockerd 2>/dev/null
     apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
-    yum remove -y docker docker-client docker-client-latest docker-common docker-latest docker-latest-logrotate docker-logrotate docker-engine containerd.io 2>/dev/null || true
-    rm -rf /etc/docker /var/lib/docker /var/lib/containerd
-    echo -e "${gl_lv}Docker 卸载完成${gl_bai}"
+    yum remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+    rm -rf /var/lib/docker /etc/docker /var/lib/containerd
+    echo -e "${GREEN}Docker 已卸载${RESET}"
 }
 
-# ================== Docker IPv6 ==================
+# ================== IPv6 管理 ==================
 docker_ipv6_on() {
     root_use
-    install_jq
-    local CONFIG_FILE="/etc/docker/daemon.json"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo '{"ipv6": true, "fixed-cidr-v6": "2001:db8:1::/64"}' | jq . > "$CONFIG_FILE"
-    else
-        ORIGINAL=$(<"$CONFIG_FILE")
-        UPDATED=$(echo "$ORIGINAL" | jq '. + {ipv6:true,"fixed-cidr-v6":"2001:db8:1::/64"}')
-        echo "$UPDATED" | jq . > "$CONFIG_FILE"
-    fi
-    systemctl_enable_start
-    echo -e "${gl_lv}IPv6 已开启${gl_bai}"
+    mkdir -p /etc/docker
+    jq '. + {ipv6: true, "fixed-cidr-v6": "2001:db8:1::/64"}' /etc/docker/daemon.json 2>/dev/null >/etc/docker/daemon.json.tmp || \
+        echo '{"ipv6": true, "fixed-cidr-v6": "2001:db8:1::/64"}' > /etc/docker/daemon.json.tmp
+    mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+    systemctl restart docker 2>/dev/null || dockerd >/dev/null 2>&1 &
+    echo -e "${GREEN}Docker IPv6 已开启${RESET}"
 }
 
 docker_ipv6_off() {
     root_use
-    install_jq
-    local CONFIG_FILE="/etc/docker/daemon.json"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo -e "${gl_hong}配置文件不存在${gl_bai}"
+    if [ -f /etc/docker/daemon.json ]; then
+        jq 'del(.ipv6) | del(.["fixed-cidr-v6"])' /etc/docker/daemon.json > /etc/docker/daemon.json.tmp
+        mv /etc/docker/daemon.json.tmp /etc/docker/daemon.json
+        systemctl restart docker 2>/dev/null || dockerd >/dev/null 2>&1 &
+        echo -e "${GREEN}Docker IPv6 已关闭${RESET}"
+    else
+        echo -e "${YELLOW}Docker 配置文件不存在${RESET}"
+    fi
+}
+
+# ================== 开放所有端口 ==================
+open_all_ports() {
+    root_use
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+    iptables -F
+    mkdir -p /etc/iptables
+    iptables-save > /etc/iptables/rules.v4
+    echo -e "${GREEN}已开放所有端口并保存规则${RESET}"
+}
+
+# ================== 容器管理 ==================
+docker_ps() {
+    if ! command -v docker &>/dev/null; then
+        echo -e "${RED}Docker 未安装，请先安装${RESET}"
         return
     fi
-    ORIGINAL=$(<"$CONFIG_FILE")
-    UPDATED=$(echo "$ORIGINAL" | jq 'del(.["fixed-cidr-v6"]) | .ipv6=false')
-    echo "$UPDATED" | jq . > "$CONFIG_FILE"
-    systemctl_enable_start
-    echo -e "${gl_lv}IPv6 已关闭${gl_bai}"
+    while true; do
+        clear
+        echo "Docker 容器列表"
+        docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
+        echo ""
+        echo "1. 创建新容器 2. 启动容器 3. 停止容器 4. 删除容器 5. 重启容器"
+        echo "6. 启动所有 7. 停止所有 8. 删除所有 9. 重启所有"
+        echo "11. 进入容器 12. 查看日志 13. 查看网络 14. 查看占用"
+        echo "0. 返回"
+        read -p "请选择: " choice
+        case $choice in
+            1) read -p "请输入创建命令: " cmd; $cmd ;;
+            2) read -p "请输入容器名: " name; docker start $name ;;
+            3) read -p "请输入容器名: " name; docker stop $name ;;
+            4) read -p "请输入容器名: " name; docker rm -f $name ;;
+            5) read -p "请输入容器名: " name; docker restart $name ;;
+            6) docker start $(docker ps -a -q) ;;
+            7) docker stop $(docker ps -q) ;;
+            8) read -p "确定删除所有容器? (Y/N): " c; [[ $c =~ [Yy] ]] && docker rm -f $(docker ps -a -q) ;;
+            9) docker restart $(docker ps -q) ;;
+            11) read -p "请输入容器名: " name; docker exec -it $name /bin/sh ;;
+            12) read -p "请输入容器名: " name; docker logs $name ;;
+            13) docker ps -q | while read cid; do docker inspect --format '{{.Name}} {{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{$v.IPAddress}}{{end}}' $cid; done ;;
+            14) docker stats --no-stream ;;
+            0) break ;;
+            *) echo "无效选择" ;;
+        esac
+        read -p "按回车继续..."
+    done
 }
 
-# ================== Docker 镜像管理 ==================
-docker_image_manage() {
-while true; do
-    clear
-    echo "Docker 镜像列表"
-    docker image ls
-    echo ""
-    echo "镜像操作"
-    echo "------------------------"
-    echo "1. 获取指定镜像"
-    echo "2. 更新指定镜像"
-    echo "3. 删除指定镜像"
-    echo "4. 删除所有镜像"
-    echo "0. 返回上一级选单"
-    echo "------------------------"
-    read -e -p "请输入你的选择: " sub_choice
-    case $sub_choice in
-        1)
-            read -e -p "请输入镜像名（可多个空格分隔）: " imagenames
-            for name in $imagenames; do
-                echo -e "${gl_huang}正在获取镜像: $name${gl_bai}"
-                docker pull $name
-            done
-            ;;
-        2)
-            read -e -p "请输入镜像名（可多个空格分隔）: " imagenames
-            for name in $imagenames; do
-                echo -e "${gl_huang}正在更新镜像: $name${gl_bai}"
-                docker pull $name
-            done
-            ;;
-        3)
-            read -e -p "请输入镜像名（可多个空格分隔）: " imagenames
-            for name in $imagenames; do
-                docker rmi -f $name
-            done
-            ;;
-        4)
-            read -e -p "确定删除所有镜像吗？(Y/N): " choice
-            [[ "$choice" =~ [Yy] ]] && docker rmi -f $(docker images -q)
-            ;;
-        0) break ;;
-        *) echo "无效选项" ;;
-    esac
-done
+# ================== 镜像管理 ==================
+docker_image() {
+    if ! command -v docker &>/dev/null; then
+        echo -e "${RED}Docker 未安装，请先安装${RESET}"
+        return
+    fi
+    while true; do
+        clear
+        echo "Docker 镜像列表"
+        docker image ls
+        echo "1. 拉取镜像 2. 更新镜像 3. 删除镜像 4. 删除所有镜像 0. 返回"
+        read -p "选择操作: " choice
+        case $choice in
+            1) read -p "请输入镜像名: " imgs; for img in $imgs; do docker pull $img; done ;;
+            2) read -p "请输入镜像名: " imgs; for img in $imgs; do docker pull $img; done ;;
+            3) read -p "请输入镜像名: " imgs; for img in $imgs; do docker rmi -f $img; done ;;
+            4) read -p "确定删除所有镜像? (Y/N): " c; [[ $c =~ [Yy] ]] && docker rmi -f $(docker images -q) ;;
+            0) break ;;
+            *) echo "无效选择" ;;
+        esac
+        read -p "按回车继续..."
+    done
 }
 
-# ================== Docker 容器管理 ==================
-docker_ps() {
-while true; do
-    clear
-    echo "Docker容器列表"
-    docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
-    echo ""
-    echo "容器操作"
-    echo "------------------------"
-    echo "1. 创建新的容器"
-    echo "2. 启动指定容器             6. 启动所有容器"
-    echo "3. 停止指定容器             7. 停止所有容器"
-    echo "4. 删除指定容器             8. 删除所有容器"
-    echo "5. 重启指定容器             9. 重启所有容器"
-    echo "------------------------"
-    echo "11. 进入指定容器           12. 查看容器日志"
-    echo "13. 查看容器网络           14. 查看容器占用"
-    echo "15. 开放所有端口           16. 阻止容器端口访问"
-    echo "0. 返回上一级选单"
-    echo "------------------------"
-    read -e -p "请输入你的选择: " sub_choice
-    case $sub_choice in
-        1) read -e -p "请输入创建命令: " dockername; $dockername ;;
-        2) read -e -p "请输入容器名（多个空格分隔）: " dockername; docker start $dockername ;;
-        3) read -e -p "请输入容器名（多个空格分隔）: " dockername; docker stop $dockername ;;
-        4) read -e -p "请输入容器名（多个空格分隔）: " dockername; docker rm -f $dockername ;;
-        5) read -e -p "请输入容器名（多个空格分隔）: " dockername; docker restart $dockername ;;
-        6) docker start $(docker ps -a -q) ;;
-        7) docker stop $(docker ps -q) ;;
-        8) read -e -p "确定删除所有容器吗？(Y/N): " choice; [[ "$choice" =~ [Yy] ]] && docker rm -f $(docker ps -a -q) ;;
-        9) docker restart $(docker ps -q) ;;
-        11) read -e -p "请输入容器名: " dockername; docker exec -it $dockername /bin/sh ;;
-        12) read -e -p "请输入容器名: " dockername; docker logs $dockername ;;
-        13)
-            echo "------------------------------------------------------------"
-            printf "%-25s %-25s %-25s\n" "容器名称" "网络名称" "IP地址"
-            for id in $(docker ps -q); do
-                info=$(docker inspect --format '{{ .Name }}{{ range $n, $conf := .NetworkSettings.Networks }} {{ $n }} {{ $conf.IPAddress }}{{ end }}' $id)
-                name=$(echo $info | awk '{print $1}')
-                nets=$(echo $info | cut -d' ' -f2-)
-                while read -r line; do
-                    net=$(echo $line | awk '{print $1}')
-                    ip=$(echo $line | awk '{print $2}')
-                    printf "%-20s %-20s %-15s\n" "$name" "$net" "$ip"
-                done <<< "$nets"
-            done
-            ;;
-        14) docker stats --no-stream ;;
-        15)
-            read -e -p "请输入容器名: " docker_name
-            ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $docker_name)
-            iptables -I INPUT -p tcp -d $ip -j ACCEPT
-            iptables -I INPUT -p udp -d $ip -j ACCEPT
-            iptables-save >/etc/iptables/rules.v4 2>/dev/null || iptables-save >/etc/iptables.rules
-            echo -e "${gl_lv}已开放所有端口并保存iptables规则${gl_bai}"
-            ;;
-        16)
-            read -e -p "请输入容器名: " docker_name
-            ip=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $docker_name)
-            iptables -D INPUT -p tcp -d $ip -j ACCEPT
-            iptables -D INPUT -p udp -d $ip -j ACCEPT
-            iptables-save >/etc/iptables/rules.v4 2>/dev/null || iptables-save >/etc/iptables.rules
-            echo -e "${gl_lv}已阻止容器端口并保存iptables规则${gl_bai}"
-            ;;
-        *) break ;;
-    esac
-done
+# ================== crontab 自动安装 ==================
+check_crontab_installed() {
+    if ! command -v crontab >/dev/null 2>&1; then
+        install_crontab
+    else
+        echo -e "${GREEN}crontab 已安装${RESET}"
+    fi
+}
+
+install_crontab() {
+    root_use
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        case "$ID" in
+            ubuntu|debian|kali)
+                apt update
+                apt install -y cron
+                systemctl enable cron
+                systemctl start cron
+                ;;
+            centos|rhel|almalinux|rocky)
+                yum install -y cronie
+                systemctl enable crond
+                systemctl start crond
+                ;;
+            fedora)
+                dnf install -y cronie
+                systemctl enable crond
+                systemctl start crond
+                ;;
+            alpine)
+                apk add --no-cache cronie
+                rc-update add crond
+                rc-service crond start
+                ;;
+            *)
+                echo -e "${RED}不支持的发行版: $ID${RESET}"
+                return
+                ;;
+        esac
+        echo -e "${GREEN}crontab 已安装并启动服务${RESET}"
+    else
+        echo -e "${RED}无法确定操作系统，crontab 安装失败${RESET}"
+        return
+    fi
 }
 
 # ================== 主菜单 ==================
-while true; do
-    clear
-    echo "===== Docker 管理脚本 ====="
-    echo "1. 安装 Docker"
-    echo "2. 更新 Docker"
-    echo "3. 卸载 Docker"
-    echo "4. 管理容器"
-    echo "5. 管理镜像"
-    echo "6. 开启 Docker IPv6"
-    echo "7. 关闭 Docker IPv6"
-    echo "0. 退出"
-    read -e -p "请选择: " choice
-    case $choice in
-        1) docker_official_install ;;
-        2) docker_update ;;
-        3) docker_uninstall ;;
-        4) docker_ps ;;
-        5) docker_image_manage ;;
-        6) docker_ipv6_on ;;
-        7) docker_ipv6_off ;;
-        0) exit ;;
-        *) echo "无效选项" ;;
-    esac
-done
+main_menu() {
+    root_use
+    while true; do
+        clear
+        echo "===== VPS Docker 管理菜单 ====="
+        echo "1. 安装 Docker（自动检测国内/国外源）"
+        echo "2. 更新 Docker"
+        echo "3. 卸载 Docker"
+        echo "4. 容器管理"
+        echo "5. 镜像管理"
+        echo "6. 开启 IPv6"
+        echo "7. 关闭 IPv6"
+        echo "8. 开放所有端口并保存规则"
+        echo "9. 安装/检查 crontab"
+        echo "0. 退出"
+        read -p "请选择: " choice
+        case $choice in
+            1) docker_install ;;
+            2) docker_update ;;
+            3) docker_uninstall ;;
+            4) docker_ps ;;
+            5) docker_image ;;
+            6) docker_ipv6_on ;;
+            7) docker_ipv6_off ;;
+            8) open_all_ports ;;
+            9) check_crontab_installed ;;
+            0) exit 0 ;;
+            *) echo "无效选择" ;;
+        esac
+        read -p "按回车继续..."
+    done
+}
+
+main_menu
