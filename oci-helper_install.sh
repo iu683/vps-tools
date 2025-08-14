@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# OCI Helper Docker Compose 管理脚本（带首次密码提示）
+# OCI Helper Docker Compose 管理脚本（带修改密码功能）
 # ========================================
 
 RED="\033[31m"
@@ -27,27 +27,17 @@ while true; do
     echo -e "\n${YELLOW}==== OCI Helper 管理 ====${RESET}"
     echo "1) 安装或更新容器"
     echo "2) 卸载容器"
-    echo "3) 查看访问地址"
-    echo "4) 查看容器日志"
-    echo "5) 退出"
-    read -rp "请选择操作 [1-5]: " choice
+    echo "3) 修改默认账号密码"
+    echo "4) 查看访问地址"
+    echo "5) 查看容器日志"
+    echo "6) 退出"
+    read -rp "请选择操作 [1-6]: " choice
 
     case $choice in
         1)
             echo -e "${GREEN}正在安装或更新 OCI Helper 容器...${RESET}"
             bash <(wget -qO- "$INSTALL_SCRIPT_URL")
             echo -e "${CYAN}安装/更新完成，访问地址: ${GREEN}http://$SERVER_IP:$APP_PORT${RESET}"
-
-            # 首次安装检测
-            if [ ! -f "$CONFIG_FILE" ]; then
-                echo -e "${YELLOW}首次安装，请修改默认账号密码！${RESET}"
-                echo -e "配置文件位置: $CONFIG_FILE"
-                read -rp "修改完成后是否立即重启容器? [y/N]: " restart_choice
-                if [[ "$restart_choice" =~ ^[Yy]$ ]]; then
-                    docker restart "$CONTAINER_NAME"
-                    echo -e "${GREEN}容器已重启${RESET}"
-                fi
-            fi
             ;;
         2)
             echo -e "${RED}正在卸载 OCI Helper 容器...${RESET}"
@@ -56,16 +46,31 @@ while true; do
             echo -e "${GREEN}卸载完成${RESET}"
             ;;
         3)
-            echo -e "${CYAN}访问地址: ${GREEN}http://$SERVER_IP:$APP_PORT${RESET}"
-            echo -e "${YELLOW}默认账号/密码：yohann / yohann${RESET}"
+            if [ ! -f "$CONFIG_FILE" ]; then
+                echo -e "${RED}配置文件不存在: $CONFIG_FILE${RESET}"
+                echo "请先安装容器"
+                continue
+            fi
+            read -rp "请输入新的账号: " new_user
+            read -rsp "请输入新的密码: " new_pass
+            echo
+            # 修改 application.yml 中的账号和密码配置
+            sed -i "s/^username:.*$/username: $new_user/" "$CONFIG_FILE"
+            sed -i "s/^password:.*$/password: $new_pass/" "$CONFIG_FILE"
+            echo -e "${GREEN}账号密码已修改，正在重启容器...${RESET}"
+            docker restart "$CONTAINER_NAME"
+            echo -e "${CYAN}容器已重启完成，新的账号密码生效${RESET}"
             ;;
         4)
+            echo -e "${CYAN}访问地址: ${GREEN}http://$SERVER_IP:$APP_PORT${RESET}"
+            ;;
+        5)
             echo -e "${YELLOW}容器日志 (${CONTAINER_NAME}):${RESET}"
             docker logs "$CONTAINER_NAME"
             echo -e "\n${YELLOW}如果需要导出日志到文件，可执行:${RESET}"
             echo "docker logs $CONTAINER_NAME >> /app/oci-helper/oci-helper.log"
             ;;
-        5)
+        6)
             echo "退出脚本"
             exit 0
             ;;
