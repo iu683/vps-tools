@@ -1,20 +1,45 @@
 #!/bin/bash
-# VPS Docker 管理脚本（美化菜单 + 自动检测国内/国外源 + 安装/更新/卸载 + 容器/镜像/IPv6/开放端口 + 开机自启）
+# VPS Docker 管理脚本（安装/更新/卸载 + 容器/镜像管理 + IPv6 + 开放端口）
+# 自动检测 Docker 是否运行并启动，取消开机自启服务
 
-# ================== 颜色定义 ==================
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
-BLUE="\033[34m"
 CYAN="\033[36m"
-MAGENTA="\033[35m"
 RESET="\033[0m"
+BOLD="\033[1m"
 
 root_use() {
     if [[ $EUID -ne 0 ]]; then
         echo -e "${RED}请使用 root 用户运行脚本${RESET}"
         exit 1
     fi
+}
+
+# ================== 检测 Docker 是否运行 ==================
+check_docker_running() {
+    if ! command -v docker &>/dev/null; then
+        echo -e "${RED}Docker 未安装，请先安装${RESET}"
+        return 1
+    fi
+
+    if ! systemctl is-active --quiet docker; then
+        echo -e "${YELLOW}Docker 未运行，尝试启动...${RESET}"
+        if systemctl list-unit-files | grep -q "^docker.service"; then
+            systemctl start docker
+        else
+            dockerd >/dev/null 2>&1 &
+            sleep 5
+        fi
+        sleep 2
+        if ! systemctl is-active --quiet docker && ! pgrep -x dockerd >/dev/null; then
+            echo -e "${RED}Docker 启动失败，请检查日志${RESET}"
+            return 1
+        else
+            echo -e "${GREEN}Docker 已启动${RESET}"
+        fi
+    fi
+    return 0
 }
 
 # ================== 自动检测国内/国外 ==================
@@ -27,17 +52,17 @@ detect_country() {
     fi
 }
 
-# ================== Docker 操作 ==================
+# ================== 安装 Docker ==================
 docker_install() {
     root_use
     local country=$(detect_country)
-    echo "检测到国家: $country"
+    echo -e "${CYAN}检测到国家: $country${RESET}"
     if [ "$country" = "CN" ]; then
-        echo -e "${YELLOW}使用国内加速安装 Docker...${RESET}"
+        echo -e "${YELLOW}使用国内源安装 Docker...${RESET}"
         curl -fsSL https://get.docker.com -o get-docker.sh
         sh get-docker.sh
         mkdir -p /etc/docker
-        tee /etc/docker/daemon.json > /dev/null << EOF
+        cat > /etc/docker/daemon.json << EOF
 {
   "registry-mirrors": [
     "https://docker.0.unsee.tech",
@@ -52,7 +77,7 @@ EOF
         curl -fsSL https://get.docker.com | sh
     fi
 
-    # 启动 Docker 并开机自启
+    # 启动 Docker
     if systemctl list-unit-files | grep -q "^docker.service"; then
         systemctl enable docker
         systemctl start docker
@@ -60,7 +85,6 @@ EOF
         dockerd >/dev/null 2>&1 &
         sleep 5
     fi
-
     echo -e "${GREEN}Docker 安装完成并已启动${RESET}"
 }
 
@@ -126,20 +150,26 @@ open_all_ports() {
 
 # ================== 容器管理 ==================
 docker_ps() {
-    if ! command -v docker &>/dev/null; then
-        echo -e "${RED}Docker 未安装，请先安装${RESET}"
-        return
-    fi
+    if ! check_docker_running; then return; fi
     while true; do
         clear
-        echo -e "${CYAN}===== Docker 容器管理 =====${RESET}"
+        echo -e "${BOLD}${CYAN}===== Docker 容器管理 =====${RESET}"
         docker ps -a --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"
         echo ""
-        echo -e "${MAGENTA}1.${RESET} 创建新容器   ${MAGENTA}2.${RESET} 启动容器   ${MAGENTA}3.${RESET} 停止容器"
-        echo -e "${MAGENTA}4.${RESET} 删除容器     ${MAGENTA}5.${RESET} 重启容器   ${MAGENTA}6.${RESET} 启动所有"
-        echo -e "${MAGENTA}7.${RESET} 停止所有     ${MAGENTA}8.${RESET} 删除所有   ${MAGENTA}9.${RESET} 重启所有"
-        echo -e "${MAGENTA}11.${RESET} 进入容器    ${MAGENTA}12.${RESET} 查看日志  ${MAGENTA}13.${RESET} 查看网络"
-        echo -e "${MAGENTA}14.${RESET} 查看占用    ${MAGENTA}0.${RESET} 返回"
+        echo "1. 创建新容器"
+        echo "2. 启动容器"
+        echo "3. 停止容器"
+        echo "4. 删除容器"
+        echo "5. 重启容器"
+        echo "6. 启动所有"
+        echo "7. 停止所有"
+        echo "8. 删除所有"
+        echo "9. 重启所有"
+        echo "11. 进入容器"
+        echo "12. 查看日志"
+        echo "13. 查看网络信息"
+        echo "14. 查看占用资源"
+        echo "0. 返回主菜单"
         read -p "请选择: " choice
         case $choice in
             1) read -p "请输入创建命令: " cmd; $cmd ;;
@@ -164,17 +194,17 @@ docker_ps() {
 
 # ================== 镜像管理 ==================
 docker_image() {
-    if ! command -v docker &>/dev/null; then
-        echo -e "${RED}Docker 未安装，请先安装${RESET}"
-        return
-    fi
+    if ! check_docker_running; then return; fi
     while true; do
         clear
-        echo -e "${CYAN}===== Docker 镜像管理 =====${RESET}"
+        echo -e "${BOLD}${CYAN}===== Docker 镜像管理 =====${RESET}"
         docker image ls
-        echo -e "${MAGENTA}1.${RESET} 拉取镜像   ${MAGENTA}2.${RESET} 更新镜像"
-        echo -e "${MAGENTA}3.${RESET} 删除镜像   ${MAGENTA}4.${RESET} 删除所有镜像   ${MAGENTA}0.${RESET} 返回"
-        read -p "选择操作: " choice
+        echo "1. 拉取镜像"
+        echo "2. 更新镜像"
+        echo "3. 删除镜像"
+        echo "4. 删除所有镜像"
+        echo "0. 返回主菜单"
+        read -p "请选择: " choice
         case $choice in
             1) read -p "请输入镜像名: " imgs; for img in $imgs; do docker pull $img; done ;;
             2) read -p "请输入镜像名: " imgs; for img in $imgs; do docker pull $img; done ;;
@@ -187,53 +217,21 @@ docker_image() {
     done
 }
 
-# ================== 开机自启 Docker + 所有容器 ==================
-docker_autorestart() {
-    root_use
-    echo -e "${YELLOW}创建 Docker 容器开机自启服务...${RESET}"
-    tee /etc/systemd/system/docker-autostart.service > /dev/null << 'EOF'
-[Unit]
-Description=Start Docker and all containers on boot
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/docker start $(/usr/bin/docker ps -aq)
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    systemctl daemon-reload
-    systemctl enable docker-autostart
-    systemctl start docker-autostart
-    echo -e "${GREEN}Docker 与所有容器已设置开机自启${RESET}"
-}
-
 # ================== 主菜单 ==================
 main_menu() {
     root_use
     while true; do
         clear
-        echo -e "${CYAN}====================================${RESET}"
-        echo -e "${GREEN}         VPS Docker 管理菜单        ${RESET}"
-        echo -e "${CYAN}====================================${RESET}"
-        echo -e "${YELLOW}Docker 操作:${RESET}"
-        echo -e " 1. 安装 Docker"
-        echo -e " 2. 更新 Docker"
-        echo -e " 3. 卸载 Docker"
-        echo -e "${YELLOW}容器/镜像管理:${RESET}"
-        echo -e " 4. 容器管理"
-        echo -e " 5. 镜像管理"
-        echo -e "${YELLOW}系统/网络操作:${RESET}"
-        echo -e " 6. 开启 IPv6"
-        echo -e " 7. 关闭 IPv6"
-        echo -e " 8. 开放所有端口"
-        echo -e " 9. 设置 Docker + 容器开机自启"
-        echo -e " 0. 退出"
-        echo -e "${CYAN}====================================${RESET}"
+        echo -e "${BOLD}${CYAN}===== VPS Docker 管理菜单 =====${RESET}"
+        echo "1. 安装 Docker（自动检测国内/国外源）"
+        echo "2. 更新 Docker"
+        echo "3. 卸载 Docker"
+        echo "4. 容器管理"
+        echo "5. 镜像管理"
+        echo "6. 开启 IPv6"
+        echo "7. 关闭 IPv6"
+        echo "8. 开放所有端口"
+        echo "0. 退出"
         read -p "请选择: " choice
         case $choice in
             1) docker_install ;;
@@ -244,7 +242,6 @@ main_menu() {
             6) docker_ipv6_on ;;
             7) docker_ipv6_off ;;
             8) open_all_ports ;;
-            9) docker_autorestart ;;
             0) exit 0 ;;
             *) echo "无效选择" ;;
         esac
