@@ -2,7 +2,7 @@
 
 # ========================================
 # Nexus Terminal 一键管理脚本
-# 功能：自动检查配置文件 + 菜单管理 + 启动后显示访问地址
+# 功能：自动检查配置文件 + 菜单管理 + 启动后显示访问地址（端口固定18111）
 # ========================================
 
 # 颜色定义
@@ -44,16 +44,6 @@ if [ ! -f ".env" ]; then
     fi
 fi
 
-# 自动获取前端服务映射端口
-get_frontend_port() {
-    # 假设 docker-compose.yml 中前端服务名称包含 "frontend"
-    port_line=$(grep -A1 'frontend' docker-compose.yml | grep 'ports' -A1 | tail -n1)
-    # 提取冒号前后的端口
-    PORT=$(echo "$port_line" | sed -E 's/.*"([0-9]+):([0-9]+)".*/\1/')
-    # 如果解析失败，默认 8080
-    [ -z "$PORT" ] && PORT=8080
-}
-
 # 菜单函数
 show_menu() {
     echo -e "${CYAN}================ Nexus Terminal 管理菜单 ================${RESET}"
@@ -76,9 +66,10 @@ while true; do
             docker compose up -d
             echo -e "${GREEN}服务已启动${RESET}"
 
-            get_frontend_port
+            # 获取公网 IP
             IP=$(curl -s https://api.ip.sb/ip)
             [ -z "$IP" ] && IP="服务器IP"
+            PORT=18111  # 固定端口
             echo -e "${GREEN}访问地址：http://$IP:$PORT${RESET}"
             ;;
         2)
@@ -93,9 +84,10 @@ while true; do
             docker compose up -d
             echo -e "${GREEN}服务已更新并启动${RESET}"
 
-            get_frontend_port
+            # 获取公网 IP
             IP=$(curl -s https://api.ip.sb/ip)
             [ -z "$IP" ] && IP="服务器IP"
+            PORT=18111  # 固定端口
             echo -e "${GREEN}访问地址：http://$IP:$PORT${RESET}"
             ;;
         4)
