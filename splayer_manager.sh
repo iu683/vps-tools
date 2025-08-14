@@ -1,16 +1,15 @@
 #!/bin/bash
 # ========================================
 # SPlayer 一键部署 / 更新 / 卸载 脚本
-# 作者: Linai Li
+# 镜像来源: imsyy/splayer
 # ========================================
 
-# 颜色定义
 GREEN="\033[32m"
 RED="\033[31m"
 YELLOW="\033[33m"
 RESET="\033[0m"
 
-IMAGE="lsplayer/splayer:latest"
+IMAGE="imsyy/splayer:latest"
 CONTAINER="SPlayer"
 PORT=25884
 
@@ -31,7 +30,7 @@ check_docker() {
     fi
 }
 
-# 部署 SPlayer
+# 部署
 deploy() {
     check_docker
     echo -e "${GREEN}拉取 SPlayer 镜像...${RESET}"
@@ -44,19 +43,18 @@ deploy() {
     echo -e "访问地址: ${YELLOW}http://$(get_ip):${PORT}${RESET}"
 }
 
-# 更新 SPlayer
+# 更新
 update() {
     check_docker
-    echo -e "${GREEN}拉取最新 SPlayer 镜像...${RESET}"
+    echo -e "${GREEN}更新 SPlayer...${RESET}"
     docker pull $IMAGE
-    echo -e "${GREEN}重启 SPlayer 容器...${RESET}"
     docker rm -f $CONTAINER 2>/dev/null
     docker run -d --name $CONTAINER -p ${PORT}:${PORT} $IMAGE
     echo -e "${GREEN}SPlayer 已更新并重启！${RESET}"
     echo -e "访问地址: ${YELLOW}http://$(get_ip):${PORT}${RESET}"
 }
 
-# 卸载 SPlayer
+# 卸载
 uninstall() {
     echo -e "${RED}停止并删除容器...${RESET}"
     docker rm -f $CONTAINER 2>/dev/null
