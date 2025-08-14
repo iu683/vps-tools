@@ -1,7 +1,7 @@
 #!/bin/bash
 # ========================================
-# Vertex 一键管理脚本（完整增强版）
-# 支持自动检测更新 & 查看初始密码
+# Vertex 一键管理脚本（增强版）
+# 支持查看初始密码（从文件或容器读取）
 # 作者：Linai Li
 # ========================================
 
@@ -24,33 +24,6 @@ check_docker() {
     if ! command -v docker &>/dev/null; then
         echo -e "${RED}错误: 未检测到 Docker，请先安装！${RESET}"
         exit 1
-    fi
-}
-
-# 获取远程镜像 Digest
-get_remote_digest() {
-    curl -s "https://hub.docker.com/v2/repositories/${IMAGE_NAME%%:*}/tags/${IMAGE_NAME##*:}" \
-    | grep -o '"digest": *"[^"]*' | head -n1 | awk -F '"' '{print $4}'
-}
-
-# 获取本地镜像 Digest
-get_local_digest() {
-    docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}" 2>/dev/null | awk -F '@' '{print $2}'
-}
-
-# 检查更新
-check_update() {
-    echo -e "${YELLOW}正在检测镜像版本...${RESET}"
-    remote_digest=$(get_remote_digest)
-    local_digest=$(get_local_digest)
-    if [ -z "$local_digest" ]; then
-        echo -e "${RED}本地未安装 ${IMAGE_NAME}${RESET}"
-        return
-    fi
-    if [ "$remote_digest" != "$local_digest" ]; then
-        echo -e "${YELLOW}发现新版本镜像，建议更新！${RESET}"
-    else
-        echo -e "${GREEN}当前已是最新版本${RESET}"
     fi
 }
 
@@ -85,7 +58,7 @@ stop_vertex() { docker stop "${APP_NAME}" && echo -e "${YELLOW}已停止 Vertex$
 # 重启
 restart_vertex() { docker restart "${APP_NAME}" && echo -e "${GREEN}已重启 Vertex${RESET}"; }
 
-# 日志
+# 查看日志
 logs_vertex() { docker logs -f "${APP_NAME}"; }
 
 # 更新
@@ -108,23 +81,26 @@ uninstall_vertex() {
     echo -e "${GREEN}Vertex 已卸载${RESET}"
 }
 
-# 查看初始密码
+# 查看初始密码（优先文件，文件不存在则从容器读取）
 show_password() {
     PASS_FILE="${DATA_DIR}/password"
     if [ -f "$PASS_FILE" ]; then
         echo -e "${CYAN}Vertex 默认用户名: admin${RESET}"
         echo -e "${YELLOW}初始密码: $(cat "$PASS_FILE")${RESET}"
-        echo -e "${RED}⚠️  请复制密码并在登录后尽快修改账号和密码！${RESET}"
+    elif docker ps -a --format '{{.Names}}' | grep -q "^${APP_NAME}$"; then
+        echo -e "${CYAN}Vertex 默认用户名: admin${RESET}"
+        echo -e "${YELLOW}初始密码: $(docker exec "${APP_NAME}" cat /vertex/password 2>/dev/null)${RESET}"
     else
-        echo -e "${RED}未找到密码文件，请先部署 Vertex 或检查 ${PASS_FILE}${RESET}"
+        echo -e "${RED}未找到密码文件，也没有运行的容器，请先部署 Vertex${RESET}"
+        return
     fi
+    echo -e "${RED}⚠️  请复制密码并在登录后尽快修改账号和密码！${RESET}"
 }
 
 # 菜单
 menu() {
     clear
     echo -e "${CYAN}==== Vertex 管理菜单 ====${RESET}"
-    check_update
     echo -e "1. 部署 Vertex"
     echo -e "2. 启动 Vertex"
     echo -e "3. 停止 Vertex"
