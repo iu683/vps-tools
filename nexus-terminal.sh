@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ========================================
-# Nexus Terminal 一键管理脚本（自动检测 Docker + 首次部署 + 卸载）
+# Nexus Terminal 一键管理脚本（自动检测 Docker + 菜单管理 + 卸载）
 # ========================================
 
 # 颜色定义
@@ -31,26 +31,13 @@ fi
 # 工作目录
 WORKDIR="$HOME/nexus-terminal"
 
-# 首次部署检测
-first_run=false
+# 确保工作目录存在
 if [ ! -d "$WORKDIR" ]; then
-    first_run=true
     mkdir -p "$WORKDIR"
     echo -e "${GREEN}已创建工作目录：$WORKDIR${RESET}"
 fi
 
 cd "$WORKDIR" || exit
-
-# 首次运行自动下载 docker-compose.yml 和 .env
-if [ "$first_run" = true ]; then
-    echo -e "${BLUE}首次运行：下载 docker-compose.yml 和 .env 文件...${RESET}"
-    wget -q https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/docker-compose.yml -O docker-compose.yml
-    wget -q https://raw.githubusercontent.com/Heavrnl/nexus-terminal/refs/heads/main/.env -O .env
-
-    echo -e "${GREEN}首次运行：启动服务中...${RESET}"
-    docker compose up -d
-    echo -e "${GREEN}服务已启动，访问端口请查看 .env 文件配置${RESET}"
-fi
 
 # 菜单函数
 show_menu() {
