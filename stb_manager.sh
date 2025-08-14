@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# STB 本地源码一键运行脚本（带 MongoDB 安装）
+# STB 本地源码一键运行脚本（零环境部署 + 卸载）
 # 作者: Linai Li
 # ========================================
 
@@ -18,13 +18,14 @@ MONGO_HOST=${MONGO_URL:-"mongodb://localhost:27017/stb"}
 function show_menu() {
     echo -e "${CYAN}================= STB 本地运行管理 =================${RESET}"
     echo -e "${GREEN}1.${RESET} 下载源码"
-    echo -e "${GREEN}2.${RESET} 安装依赖"
+    echo -e "${GREEN}2.${RESET} 安装 Node.js / pnpm / 项目依赖"
     echo -e "${GREEN}3.${RESET} 编译项目"
     echo -e "${GREEN}4.${RESET} 启动项目"
     echo -e "${GREEN}5.${RESET} 查看日志"
     echo -e "${GREEN}6.${RESET} 停止项目"
     echo -e "${GREEN}7.${RESET} 检测 MongoDB"
     echo -e "${GREEN}8.${RESET} 安装 MongoDB (本地或 Docker)"
+    echo -e "${GREEN}9.${RESET} 卸载项目及环境"
     echo -e "${GREEN}0.${RESET} 退出"
     echo -e "${CYAN}================================================${RESET}"
 }
@@ -40,8 +41,23 @@ function clone_repo() {
 }
 
 function install_dependencies() {
-    echo -e "${GREEN}安装 pnpm...${RESET}"
-    npm install -g pnpm
+    echo -e "${YELLOW}检查 Node.js 是否安装...${RESET}"
+    if ! command -v node >/dev/null 2>&1; then
+        echo -e "${GREEN}未检测到 Node.js，开始安装...${RESET}"
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+        sudo apt install -y nodejs
+    else
+        echo -e "${GREEN}Node.js 已安装: $(node -v)${RESET}"
+    fi
+
+    echo -e "${YELLOW}检查 pnpm 是否安装...${RESET}"
+    if ! command -v pnpm >/dev/null 2>&1; then
+        echo -e "${GREEN}未检测到 pnpm，开始安装...${RESET}"
+        npm install -g pnpm
+    else
+        echo -e "${GREEN}pnpm 已安装: $(pnpm -v)${RESET}"
+    fi
+
     echo -e "${GREEN}安装项目依赖...${RESET}"
     cd $APP_DIR || exit
     pnpm install
@@ -125,6 +141,38 @@ function install_mongo() {
     esac
 }
 
+function uninstall_all() {
+    echo -e "${YELLOW}停止项目...${RESET}"
+    stop_project
+
+    echo -e "${YELLOW}删除 STB 项目目录...${RESET}"
+    rm -rf $APP_DIR
+    echo -e "${GREEN}STB 项目目录已删除${RESET}"
+
+    echo -e "${YELLOW}删除本地 MongoDB 或 Docker 容器...${RESET}"
+    if docker ps -a | grep stb-mongo >/dev/null; then
+        docker stop stb-mongo
+        docker rm stb-mongo
+        echo -e "${GREEN}MongoDB Docker 容器已删除${RESET}"
+    else
+        sudo systemctl stop mongodb 2>/dev/null
+        sudo apt purge -y mongodb
+        sudo apt autoremove -y
+        echo -e "${GREEN}本地 MongoDB 已删除${RESET}"
+    fi
+
+    echo -e "${YELLOW}可选: 卸载 Node.js 和 pnpm? (y/N)${RESET}"
+    read -p "请输入: " yn
+    if [[ "$yn" == "y" || "$yn" == "Y" ]]; then
+        sudo apt purge -y nodejs
+        sudo npm uninstall -g pnpm
+        sudo apt autoremove -y
+        echo -e "${GREEN}Node.js 和 pnpm 已卸载${RESET}"
+    fi
+
+    echo -e "${GREEN}卸载完成${RESET}"
+}
+
 # ================== 主循环 ==================
 while true; do
     show_menu
@@ -138,6 +186,7 @@ while true; do
         6) stop_project ;;
         7) check_mongo ;;
         8) install_mongo ;;
+        9) uninstall_all ;;
         0) echo -e "${GREEN}退出脚本${RESET}"; exit 0 ;;
         *) echo -e "${RED}无效选项，请重新输入${RESET}" ;;
     esac
