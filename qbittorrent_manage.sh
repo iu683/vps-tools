@@ -1,7 +1,6 @@
 #!/bin/bash
 # ========================================
-# qBittorrent-Nox 一键管理脚本（增强版）
-# 新增功能：重置密码 & 修改 WebUI 端口和用户名
+# qBittorrent-Nox 一键管理脚本（支持设置非空密码）
 # 作者：Linai Li
 # ========================================
 
@@ -16,7 +15,7 @@ SERVICE_NAME="qbittorrent"
 CONFIG_DIR="${HOME}/.config/qBittorrent"
 CONF_FILE="${CONFIG_DIR}/qBittorrent.conf"
 
-# 部署 qBittorrent-Nox
+# 安装 & 部署 qBittorrent-Nox
 install_qbittorrent() {
     echo -e "${YELLOW}更新软件包列表...${RESET}"
     sudo apt update
@@ -39,27 +38,26 @@ WantedBy=multi-user.target
 EOF
 
     sudo systemctl daemon-reload
-    sudo systemctl start qbittorrent
     sudo systemctl enable qbittorrent
+    sudo systemctl start qbittorrent
 
     echo -e "${GREEN}qBittorrent-Nox 安装完成并已启动!${RESET}"
-    echo -e "${CYAN}WebUI 访问地址: http://$(hostname -I | awk '{print $1}'):8080${RESET}"
-    echo -e "${YELLOW}默认用户名: admin，密码留空（首次登录请留空）${RESET}"
+    echo -e "${CYAN}首次登录 WebUI 默认用户名: admin，密码请通过“修改 WebUI 设置”设置${RESET}"
 }
 
-# 启动服务
+# 启动
 start_qbittorrent() {
     sudo systemctl start ${SERVICE_NAME}
     echo -e "${GREEN}qBittorrent 已启动${RESET}"
 }
 
-# 停止服务
+# 停止
 stop_qbittorrent() {
     sudo systemctl stop ${SERVICE_NAME}
     echo -e "${YELLOW}qBittorrent 已停止${RESET}"
 }
 
-# 重启服务
+# 重启
 restart_qbittorrent() {
     sudo systemctl restart ${SERVICE_NAME}
     echo -e "${GREEN}qBittorrent 已重启${RESET}"
@@ -70,7 +68,7 @@ logs_qbittorrent() {
     sudo journalctl -u ${SERVICE_NAME} -f
 }
 
-# 卸载服务
+# 卸载
 uninstall_qbittorrent() {
     sudo systemctl stop ${SERVICE_NAME}
     sudo systemctl disable ${SERVICE_NAME}
@@ -85,46 +83,54 @@ uninstall_qbittorrent() {
     echo -e "${GREEN}qBittorrent 已卸载${RESET}"
 }
 
-# 重置 WebUI 密码（删除配置文件）
-reset_webui_password() {
-    echo -e "${YELLOW}确定要重置 WebUI 密码吗？这将清空配置文件！[y/N]${RESET}"
-    read -r confirm
-    if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
-        sudo systemctl stop ${SERVICE_NAME}
-        rm -rf "${CONFIG_DIR}"
-        sudo systemctl start ${SERVICE_NAME}
-        echo -e "${GREEN}已重置 WebUI 密码！首次登录用户名: admin，密码留空${RESET}"
-    else
-        echo -e "${CYAN}已取消重置${RESET}"
-    fi
-}
-
-# 修改 WebUI 端口和用户名
+# 设置 WebUI 用户名/密码/端口（密码非空）
 modify_webui_settings() {
-    if [[ ! -f "${CONF_FILE}" ]]; then
-        echo -e "${RED}配置文件不存在，请先启动一次 qBittorrent-Nox${RESET}"
+    if [[ ! -d "${CONFIG_DIR}" ]]; then
+        echo -e "${RED}配置目录不存在，请先启动一次 qBittorrent-Nox${RESET}"
         return
     fi
 
-    echo -ne "${YELLOW}请输入新的 WebUI 端口（回车保留原值）: ${RESET}"
-    read -r new_port
-    echo -ne "${YELLOW}请输入新的 WebUI 用户名（回车保留原值）: ${RESET}"
+    mkdir -p "${CONFIG_DIR}"
+    touch "${CONF_FILE}"
+
+    echo -ne "${YELLOW}请输入 WebUI 用户名（回车保留 admin）: ${RESET}"
     read -r new_user
+    new_user=${new_user:-admin}
 
-    # 使用 sed 修改配置文件
-    if [[ -n "$new_port" ]]; then
-        sed -i "s/^WebUI\\\Port=.*/WebUI\\Port=${new_port}/" "${CONF_FILE}" || \
-        echo "WebUI\\Port=${new_port}" >> "${CONF_FILE}"
-        echo -e "${GREEN}已修改 WebUI 端口为: ${new_port}${RESET}"
+    # 循环确保密码非空
+    while true; do
+        echo -ne "${YELLOW}请输入 WebUI 密码（不能为空）: ${RESET}"
+        read -rs new_pass
+        echo
+        if [[ -n "$new_pass" ]]; then
+            break
+        else
+            echo -e "${RED}密码不能为空，请重新输入${RESET}"
+        fi
+    done
+
+    echo -ne "${YELLOW}请输入 WebUI 端口（回车保留 8080）: ${RESET}"
+    read -r new_port
+    new_port=${new_port:-8080}
+
+    # 生成 HA1 = MD5("用户名:qBittorrent:密码")
+    ha1=$(echo -n "${new_user}:qBittorrent:${new_pass}" | md5sum | awk '{print $1}')
+
+    # 写入配置文件
+    if ! grep -q "^\[Preferences\]" "${CONF_FILE}"; then
+        echo "[Preferences]" > "${CONF_FILE}"
     fi
 
-    if [[ -n "$new_user" ]]; then
-        sed -i "s/^WebUI\\\Username=.*/WebUI\\Username=${new_user}/" "${CONF_FILE}" || \
-        echo "WebUI\\Username=${new_user}" >> "${CONF_FILE}"
-        echo -e "${GREEN}已修改 WebUI 用户名为: ${new_user}${RESET}"
-    fi
+    # 替换或新增
+    sed -i "/^WebUI\\Username=/d" "${CONF_FILE}"
+    sed -i "/^WebUI\\Password_ha1=/d" "${CONF_FILE}"
+    sed -i "/^WebUI\\Port=/d" "${CONF_FILE}"
 
-    echo -e "${YELLOW}请重启 qBittorrent 服务以使修改生效${RESET}"
+    echo "WebUI\Username=${new_user}" >> "${CONF_FILE}"
+    echo "WebUI\Password_ha1=@ByteArray(${ha1})" >> "${CONF_FILE}"
+    echo "WebUI\Port=${new_port}" >> "${CONF_FILE}"
+
+    echo -e "${GREEN}已成功修改 WebUI 设置！请重启服务生效${RESET}"
 }
 
 # 菜单
@@ -137,8 +143,7 @@ menu() {
     echo -e "4. 重启 qBittorrent"
     echo -e "5. 查看日志"
     echo -e "6. 卸载 qBittorrent"
-    echo -e "7. 重置 WebUI 密码"
-    echo -e "8. 修改 WebUI 端口和用户名"
+    echo -e "7. 设置 WebUI 用户名/密码/端口（密码非空）"
     echo -e "0. 退出"
     echo -ne "${YELLOW}请输入选项: ${RESET}"
     read -r choice
@@ -149,8 +154,7 @@ menu() {
         4) restart_qbittorrent ;;
         5) logs_qbittorrent ;;
         6) uninstall_qbittorrent ;;
-        7) reset_webui_password ;;
-        8) modify_webui_settings ;;
+        7) modify_webui_settings ;;
         0) exit 0 ;;
         *) echo -e "${RED}无效选项${RESET}" ;;
     esac
