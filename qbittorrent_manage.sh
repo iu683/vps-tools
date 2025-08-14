@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# Docker qBittorrent 管理脚本
+# Docker qBittorrent 管理脚本（使用 docker compose）
 # 作者：Linai Li
 # ========================================
 
@@ -47,7 +47,7 @@ services:
 EOF
 
     echo -e "${YELLOW}启动容器...${RESET}"
-    docker-compose up -d
+    docker compose up -d
 
     echo -e "${GREEN}qBittorrent Docker 容器已部署并启动！${RESET}"
     echo -e "${CYAN}WebUI 地址: http://$(hostname -I | awk '{print $1}'):8080${RESET}"
@@ -56,34 +56,34 @@ EOF
 # 启动容器
 start_qbittorrent() {
     cd "${BASE_DIR}" || return
-    docker-compose start
+    docker compose start
     echo -e "${GREEN}qBittorrent 已启动${RESET}"
 }
 
 # 停止容器
 stop_qbittorrent() {
     cd "${BASE_DIR}" || return
-    docker-compose stop
+    docker compose stop
     echo -e "${YELLOW}qBittorrent 已停止${RESET}"
 }
 
 # 重启容器
 restart_qbittorrent() {
     cd "${BASE_DIR}" || return
-    docker-compose restart
+    docker compose restart
     echo -e "${GREEN}qBittorrent 已重启${RESET}"
 }
 
 # 查看日志
 logs_qbittorrent() {
     cd "${BASE_DIR}" || return
-    docker-compose logs -f
+    docker compose logs -f
 }
 
 # 卸载容器
 uninstall_qbittorrent() {
     cd "${BASE_DIR}" || return
-    docker-compose down
+    docker compose down
     echo -e "${YELLOW}是否删除配置和下载目录？[y/N]${RESET}"
     read -r del
     if [[ "$del" == "y" || "$del" == "Y" ]]; then
