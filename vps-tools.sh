@@ -72,7 +72,7 @@ SUB_MENU[4]="25 Hysteria2|26 3XUI|27 WARP|28 Surge-Snell|29 国外机EZRealm|30 
 SUB_MENU[5]="33 IP解锁-IPv4|34 IP解锁-IPv6|35 网络质量-IPv4|36 网络质量-IPv6|37 NodeQuality脚本|38 流媒体解锁|39 融合怪测试|40 国外机三网测速|41 国内机三网测速|42 国外机三网延迟测试|43 国内机三网延迟测试"
 SUB_MENU[6]="44 Sub-Store|45 WebSSH|46 Poste.io 邮局|47 OpenList|48 应用管理工具"
 SUB_MENU[7]="49 老王工具箱|50 科技lion|51 一点科技|52 服务器优化工具|53 VPS-Toolkit|54 VPS管理"
-SUB_MENU[8]="55 安装 Docker Compose|56 Docker备份和恢复|57 Docker容器迁移|58 安装Docker"
+SUB_MENU[8]="55 安装 DockerCompose|56 Docker备份和恢复|57 Docker容器迁移|58 Docker管理"
 SUB_MENU[9]="59 NGINX反代|60 1kejiNGINX反代(V4)|61 1kejiNGINX反代(V6)"
 SUB_MENU[10]="89 更新脚本|99 卸载工具箱|0 退出"
 
@@ -177,10 +177,10 @@ execute_choice() {
         52) curl -sSL https://raw.githubusercontent.com/iu683/vps-tools/main/optimize.sh -o optimize.sh && chmod +x optimize.sh && ./optimize.sh ;;
         53) curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-toolkit.sh -o vps-toolkit.sh && chmod +x vps-toolkit.sh && ./vps-toolkit.sh ;;
         54) curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-control.sh -o vps-control.sh && chmod +x vps-control.sh && ./vps-control.sh ;;
-        55) curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose ;;
+        55) curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose ;;
         56) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/docker-backup.sh) ;;
         57) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/docker-migrate.sh) ;;
-        58) curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh ;;
+        58) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/Docker.sh) ;;
         59) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/manage_nginx.sh) ;;
         60) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh) ;;
         61) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh) ;;
