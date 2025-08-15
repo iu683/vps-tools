@@ -66,8 +66,15 @@ show_system_usage() {
 print_option() {
     local num="$1"
     local text="$2"
-    printf "${green}%02d  %-30s${reset}\n" "$num" "$text"
+    if [ "$num" -eq 0 ]; then
+        # 0 不补零
+        printf "${green}%d  %-30s${reset}\n" "$num" "$text"
+    else
+        # 其他补零
+        printf "${green}%02d  %-30s${reset}\n" "$num" "$text"
+    fi
 }
+
 
 # 显示菜单
 show_menu() {
