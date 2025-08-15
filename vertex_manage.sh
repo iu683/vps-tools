@@ -14,7 +14,7 @@ RESET="\033[0m"
 
 # 配置
 APP_NAME="vertex"
-APP_PORT=3000
+APP_PORT=3006   # 修改端口为 3006
 DATA_DIR="/root/vertex"
 IMAGE_NAME="lswl/vertex:stable"
 TIMEZONE="Asia/Shanghai"
