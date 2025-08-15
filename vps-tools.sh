@@ -1,7 +1,8 @@
 #!/bin/bash
 # VPS Toolbox - 交互式二级菜单版
 # 功能：
-# - 一级菜单加 ▶ 标识，二级菜单简洁显示
+# - 一级菜单加 ▶ 标识，字体绿色
+# - 二级菜单简洁显示
 # - 更新/卸载单独一级菜单
 # - 快捷指令 m / M 自动创建
 # - 系统信息面板保留
@@ -33,19 +34,6 @@ rainbow_animate() {
     printf "${reset}\n"
 }
 
-# 彩虹静态边框
-rainbow_border() {
-    local text="$1"
-    local colors=(31 33 32 36 34 35)
-    local output=""
-    local i=0
-    for (( c=0; c<${#text}; c++ )); do
-        output+="\033[${colors[$i]}m${text:$c:1}"
-        ((i=(i+1)%${#colors[@]}))
-    done
-    echo -e "$output${reset}"
-}
-
 # 系统资源显示
 show_system_usage() {
     local width=36
@@ -60,17 +48,6 @@ show_system_usage() {
     echo -e "${yellow}$(pad_string "💽 磁盘：${disk_used_percent} 用 / 总 ${disk_total}")${reset}"
     echo -e "${yellow}$(pad_string "⚙ CPU：${cpu_usage}%")${reset}"
     echo -e "${yellow}└$(printf '─%.0s' $(seq 1 $width))┘${reset}\n"
-}
-
-# 打印菜单项
-print_option() {
-    local num="$1"
-    local text="$2"
-    if [ "$num" -eq 0 ]; then
-        printf "${green}%d  %-30s${reset}\n" "$num" "$text"
-    else
-        printf "${green}%02d  %-30s${reset}\n" "$num" "$text"
-    fi
 }
 
 # 一级菜单列表
@@ -107,7 +84,7 @@ show_main_menu() {
     rainbow_animate "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     show_system_usage
     for i in "${!MAIN_MENU[@]}"; do
-        echo -e "${red}$((i+1)). ${MAIN_MENU[i]}${reset}"
+        echo -e "${green}▶ $((i+1)). ${MAIN_MENU[i]}${reset}"
     done
     echo
 }
@@ -141,10 +118,9 @@ install_shortcut() {
 # 删除快捷指令
 remove_shortcut() {
     sudo rm -f "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"
-    echo -e "${red}已删除快捷指令 m 和 M${reset}"
 }
 
-# 执行菜单选项（保持原执行逻辑）
+# 执行菜单选项（完整补全）
 execute_choice() {
     case "$1" in
         1) sudo apt update ;;
@@ -209,7 +185,13 @@ execute_choice() {
         60) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh) ;;
         61) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh) ;;
         89) bash "$INSTALL_PATH" update ;;
-        99) bash "$INSTALL_PATH" uninstall ;;
+        99) 
+            echo -e "${yellow}正在卸载工具箱...${reset}"
+            remove_shortcut
+            rm -f "$INSTALL_PATH"
+            echo -e "${green}卸载完成！${reset}"
+            exit 0
+            ;;
         0) exit 0 ;;
         *) echo -e "${red}无效选项${reset}" ;;
     esac
