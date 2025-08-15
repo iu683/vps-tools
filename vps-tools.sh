@@ -67,14 +67,11 @@ print_option() {
     local num="$1"
     local text="$2"
     if [ "$num" -eq 0 ]; then
-        # 0 不补零
         printf "${green}%d  %-30s${reset}\n" "$num" "$text"
     else
-        # 其他补零
         printf "${green}%02d  %-30s${reset}\n" "$num" "$text"
     fi
 }
-
 
 # 显示菜单
 show_menu() {
@@ -99,7 +96,7 @@ show_menu() {
     print_option 12 "开放所有端口"
 
     echo -e "\n${red}▶ 哪吒相关${reset}"
-    print_option 13 "安装解压工具"
+    print_option 13 "安装unzip"
     print_option 14 "卸载哪吒探针"
     print_option 15 "v1关SSH"
     print_option 16 "v0关SSH"
@@ -159,6 +156,8 @@ show_menu() {
 
     echo -e "\n${red}▶ 证书工具${reset}"
     print_option 58 "NGINX反代"
+    print_option 59 "1kejiNGINX反代(V4)"
+    print_option 60 "1kejiNGINX反代(V6)"
 
     echo -e "\n${red}更新/卸载${reset}"
     print_option 89 "更新脚本"
@@ -172,10 +171,10 @@ show_menu() {
 install_shortcut() {
     echo -e "${green}创建快捷指令 m 和 M${reset}"
     local script_path
-    script_path=$(realpath "$0")
+    script_path=$(readlink -f "$0")
+    sudo chmod +x "$script_path"
     sudo ln -sf "$script_path" "$SHORTCUT_PATH"
     sudo ln -sf "$script_path" "$SHORTCUT_PATH_UPPER"
-    sudo chmod +x "$script_path"
     echo -e "${green}安装完成！输入 m 或 M 运行工具箱${reset}"
 }
 
@@ -246,19 +245,32 @@ execute_choice() {
         56) curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh && chmod +x Docker_container_migration.sh && ./Docker_container_migration.sh ;;
         57) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/Docker.sh) ;;
         58) bash <(curl -sL kejilion.sh) fd ;;
+        59) wget -O manage_nginx.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh" && chmod +x manage_nginx.sh && ./manage_nginx.sh ;;
+        60) wget -O manage_nginx_v6.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh" && chmod +x manage_nginx_v6.sh && ./manage_nginx_v6.sh ;;
         89)
             echo -e "${green}正在从 GitHub 拉取最新版本...${reset}"
             tmp_file=$(mktemp)
             curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh -o "$tmp_file" \
             && chmod +x "$tmp_file" \
-            && mv "$tmp_file" "$(realpath "$0")" \
+            && mv "$tmp_file" "$(readlink -f "$0")" \
             && echo -e "${green}更新完成，重新启动脚本...${reset}" \
-            && exec "$(realpath "$0")"
+            && exec "$(readlink -f "$0")"
             echo -e "${red}更新失败，请检查网络或仓库地址${reset}"
         ;;
-        99) echo -e "${red}卸载工具箱...${reset}"; rm -f "$INSTALL_PATH" "$(realpath "$0")"; remove_shortcut; echo -e "${green}卸载完成${reset}"; exit 0 ;;
-        0) echo -e "${yellow}退出${reset}"; exit 0 ;;
-        *) echo -e "${red}无效选项${reset}" ;;
+        99)
+            echo -e "${red}卸载工具箱...${reset}"
+            rm -f "$INSTALL_PATH" "$(readlink -f "$0")"
+            remove_shortcut
+            echo -e "${green}卸载完成${reset}"
+            exit 0
+        ;;
+        0)
+            echo -e "${yellow}退出${reset}"
+            exit 0
+        ;;
+        *)
+            echo -e "${red}无效选项${reset}"
+        ;;
     esac
 }
 
