@@ -1,5 +1,5 @@
 #!/bin/bash
-# VPS Toolbox - 最终整合美化版
+# VPS Toolbox - 最终整合美化版（新增 VPS管理）
 # 功能：
 # - 一级菜单加 ▶ 标识，二级菜单不加
 # - 快捷指令 m / M 自动创建
@@ -147,17 +147,18 @@ show_menu() {
     print_option 51 "一点科技"
     print_option 52 "服务器优化工具"
     print_option 53 "VPS-Toolkit"
+    print_option 54 "VPS管理"
 
     echo -e "\n${red}▶ Docker工具${reset}"
-    print_option 54 "安装 Docker Compose"
-    print_option 55 "Docker备份和恢复"
-    print_option 56 "Docker容器迁移"
-    print_option 57 "安装Docker"
+    print_option 55 "安装 Docker Compose"
+    print_option 56 "Docker备份和恢复"
+    print_option 57 "Docker容器迁移"
+    print_option 58 "安装Docker"
 
     echo -e "\n${red}▶ 证书工具${reset}"
-    print_option 58 "NGINX反代"
-    print_option 59 "1kejiNGINX反代(V4)"
-    print_option 60 "1kejiNGINX反代(V6)"
+    print_option 59 "NGINX反代"
+    print_option 60 "1kejiNGINX反代(V4)"
+    print_option 61 "1kejiNGINX反代(V6)"
 
     echo -e "\n${red}更新/卸载${reset}"
     print_option 89 "更新脚本"
@@ -240,13 +241,14 @@ execute_choice() {
         51) wget -O 1keji.sh "https://www.1keji.net" && chmod +x 1keji.sh && ./1keji.sh ;;
         52) bash <(curl -sL ss.hide.ss) ;;
         53) bash <(curl -sSL https://raw.githubusercontent.com/zeyu8023/vps_toolkit/main/install.sh) ;;
-        54) sudo apt install docker-compose-plugin -y ;;
-        55) curl -fsSL https://raw.githubusercontent.com/xymn2023/DMR/main/docker_back.sh -o docker_back.sh && chmod +x docker_back.sh && ./docker_back.sh ;;
-        56) curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh && chmod +x Docker_container_migration.sh && ./Docker_container_migration.sh ;;
-        57) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/Docker.sh) ;;
-        58) bash <(curl -sL kejilion.sh) fd ;;
-        59) wget -O manage_nginx.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh" && chmod +x manage_nginx.sh && ./manage_nginx.sh ;;
-        60) wget -O manage_nginx_v6.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh" && chmod +x manage_nginx_v6.sh && ./manage_nginx_v6.sh ;;
+        54) curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-control.sh -o vps-control.sh && chmod +x vps-control.sh && ./vps-control.sh ;;
+        55) sudo apt install docker-compose-plugin -y ;;
+        56) curl -fsSL https://raw.githubusercontent.com/xymn2023/DMR/main/docker_back.sh -o docker_back.sh && chmod +x docker_back.sh && ./docker_back.sh ;;
+        57) curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh && chmod +x Docker_container_migration.sh && ./Docker_container_migration.sh ;;
+        58) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/Docker.sh) ;;
+        59) bash <(curl -sL kejilion.sh) fd ;;
+        60) wget -O manage_nginx.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh" && chmod +x manage_nginx.sh && ./manage_nginx.sh ;;
+        61) wget -O manage_nginx_v6.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh" && chmod +x manage_nginx_v6.sh && ./manage_nginx_v6.sh ;;
         89)
             echo -e "${green}正在从 GitHub 拉取最新版本...${reset}"
             tmp_file=$(mktemp)
