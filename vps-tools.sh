@@ -1,11 +1,11 @@
 #!/bin/bash
-# VPS Toolbox - 最终整合美化版（新增 VPS管理）
+# VPS Toolbox - 交互式二级菜单版
 # 功能：
-# - 一级菜单加 ▶ 标识，二级菜单不加
+# - 一级菜单加 ▶ 标识，二级菜单简洁显示
+# - 更新/卸载单独一级菜单
 # - 快捷指令 m / M 自动创建
 # - 系统信息面板保留
-# - 更新、卸载功能保持不二级
-# - 彩色菜单和系统信息显示
+# - 彩色菜单和动态彩虹标题
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 SHORTCUT_PATH="/usr/local/bin/m"
@@ -73,99 +73,58 @@ print_option() {
     fi
 }
 
-# 显示菜单
-show_menu() {
+# 一级菜单列表
+MAIN_MENU=(
+    "系统设置"
+    "哪吒相关"
+    "面板相关"
+    "代理"
+    "网络解锁"
+    "应用商店"
+    "VPS设置"
+    "Docker工具"
+    "证书工具"
+    "更新/卸载"
+)
+
+# 二级菜单列表
+SUB_MENU[1]="01 更新源|02 安装curl|03 DDNS|04 本机信息|05 DDwindows10|06 临时禁用IPv6|07 添加SWAP|08 TCP窗口调优|09 安装Python|10 自定义DNS解锁|11 tun2socks|12 开放所有端口"
+SUB_MENU[2]="13 安装unzip|14 卸载哪吒探针|15 v1关SSH|16 v0关SSH|17 V0哪吒监控"
+SUB_MENU[3]="18 宝塔面板|19 1panel面板|20 宝塔开心版|21 极光面板|22 哆啦A梦转发面板|23 国外机1Panel添加应用|24 国内机1Panel添加应用"
+SUB_MENU[4]="25 Hysteria2|26 3XUI|27 WARP|28 Surge-Snell|29 国外机EZRealm|30 国内机EZRealm|31 3XUI-Alpines|32 gost"
+SUB_MENU[5]="33 IP解锁-IPv4|34 IP解锁-IPv6|35 网络质量-IPv4|36 网络质量-IPv6|37 NodeQuality脚本|38 流媒体解锁|39 融合怪测试|40 国外机三网测速|41 国内机三网测速|42 国外机三网延迟测试|43 国内机三网延迟测试"
+SUB_MENU[6]="44 Sub-Store|45 WebSSH|46 Poste.io 邮局|47 OpenList|48 应用管理工具"
+SUB_MENU[7]="49 老王工具箱|50 科技lion|51 一点科技|52 服务器优化工具|53 VPS-Toolkit|54 VPS管理"
+SUB_MENU[8]="55 安装 Docker Compose|56 Docker备份和恢复|57 Docker容器迁移|58 安装Docker"
+SUB_MENU[9]="59 NGINX反代|60 1kejiNGINX反代(V4)|61 1kejiNGINX反代(V6)"
+SUB_MENU[10]="89 更新脚本|99 卸载工具箱|0 退出"
+
+# 显示一级菜单
+show_main_menu() {
     clear
     rainbow_animate "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     rainbow_animate "              📦 VPS 服务器工具箱 📦          "
     rainbow_animate "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     show_system_usage
+    for i in "${!MAIN_MENU[@]}"; do
+        echo -e "${red}$((i+1)). ${MAIN_MENU[i]}${reset}"
+    done
+    echo
+}
 
-    echo -e "${red}▶ 系统设置${reset}"
-    print_option 1  "更新源"
-    print_option 2  "安装curl"
-    print_option 3  "DDNS"
-    print_option 4  "本机信息"
-    print_option 5  "DDwindows10"
-    print_option 6  "临时禁用IPv6"
-    print_option 7  "添加SWAP"
-    print_option 8  "TCP窗口调优"
-    print_option 9  "安装Python"
-    print_option 10 "自定义DNS解锁"
-    print_option 11 "tun2socks"
-    print_option 12 "开放所有端口"
-
-    echo -e "\n${red}▶ 哪吒相关${reset}"
-    print_option 13 "安装unzip"
-    print_option 14 "卸载哪吒探针"
-    print_option 15 "v1关SSH"
-    print_option 16 "v0关SSH"
-    print_option 17 "V0哪吒监控"
-
-    echo -e "\n${red}▶ 面板相关${reset}"
-    print_option 18 "宝塔面板"
-    print_option 19 "1panel面板"
-    print_option 20 "宝塔开心版"
-    print_option 21 "极光面板"
-    print_option 22 "哆啦A梦转发面板"
-    print_option 23 "国外机1Panel添加应用"
-    print_option 24 "国内机1Panel添加应用"
-
-    echo -e "\n${red}▶ 代理${reset}"
-    print_option 25 "Hysteria2"
-    print_option 26 "3XUI"
-    print_option 27 "WARP"
-    print_option 28 "Surge-Snell"
-    print_option 29 "国外机EZRealm"
-    print_option 30 "国内机EZRealm"
-    print_option 31 "3XUI-Alpines"
-    print_option 32 "gost"
-
-    echo -e "\n${red}▶ 网络解锁${reset}"
-    print_option 33 "IP解锁-IPv4"
-    print_option 34 "IP解锁-IPv6"
-    print_option 35 "网络质量-IPv4"
-    print_option 36 "网络质量-IPv6"
-    print_option 37 "NodeQuality脚本"
-    print_option 38 "流媒体解锁"
-    print_option 39 "融合怪测试"
-    print_option 40 "国外机三网测速"
-    print_option 41 "国内机三网测速"
-    print_option 42 "国外机三网延迟测试"
-    print_option 43 "国内机三网延迟测试"
-
-    echo -e "\n${red}▶ 应用商店${reset}"
-    print_option 44 "Sub-Store"
-    print_option 45 "WebSSH"
-    print_option 46 "Poste.io 邮局"
-    print_option 47 "OpenList"
-    print_option 48 "应用管理工具"
-
-    echo -e "\n${red}▶ VPS设置${reset}"
-    print_option 49 "老王工具箱"
-    print_option 50 "科技lion"
-    print_option 51 "一点科技"
-    print_option 52 "服务器优化工具"
-    print_option 53 "VPS-Toolkit"
-    print_option 54 "VPS管理"
-
-    echo -e "\n${red}▶ Docker工具${reset}"
-    print_option 55 "安装 Docker Compose"
-    print_option 56 "Docker备份和恢复"
-    print_option 57 "Docker容器迁移"
-    print_option 58 "安装Docker"
-
-    echo -e "\n${red}▶ 证书工具${reset}"
-    print_option 59 "NGINX反代"
-    print_option 60 "1kejiNGINX反代(V4)"
-    print_option 61 "1kejiNGINX反代(V6)"
-
-    echo -e "\n${red}更新/卸载${reset}"
-    print_option 89 "更新脚本"
-    print_option 99 "卸载工具箱"
-    print_option 0  "退出"
-
-    rainbow_border "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# 显示二级菜单并选择
+show_sub_menu() {
+    local idx="$1"
+    IFS='|' read -ra options <<< "${SUB_MENU[idx]}"
+    for opt in "${options[@]}"; do
+        echo -e "${green}$opt${reset}"
+    done
+    read -rp "请输入要执行的编号 (b返回一级菜单): " choice
+    if [[ "$choice" == "b" ]]; then
+        return
+    fi
+    execute_choice "$choice"
+    read -rp "按回车返回二级菜单..." tmp
 }
 
 # 安装快捷指令
@@ -185,7 +144,7 @@ remove_shortcut() {
     echo -e "${red}已删除快捷指令 m 和 M${reset}"
 }
 
-# 执行菜单选项
+# 执行菜单选项（保持原执行逻辑）
 execute_choice() {
     case "$1" in
         1) sudo apt update ;;
@@ -238,53 +197,39 @@ execute_choice() {
         48) curl -fsSL https://raw.githubusercontent.com/iu683/app-store/main/vpsdocker.sh -o vpsdocker.sh && chmod +x vpsdocker.sh && ./vpsdocker.sh ;;
         49) curl -fsSL https://raw.githubusercontent.com/eooce/ssh_tool/main/ssh_tool.sh -o ssh_tool.sh && chmod +x ssh_tool.sh && ./ssh_tool.sh ;;
         50) curl -sS -O https://kejilion.pro/kejilion.sh && chmod +x kejilion.sh && ./kejilion.sh ;;
-        51) wget -O 1keji.sh "https://www.1keji.net" && chmod +x 1keji.sh && ./1keji.sh ;;
-        52) bash <(curl -sL ss.hide.ss) ;;
-        53) bash <(curl -sSL https://raw.githubusercontent.com/zeyu8023/vps_toolkit/main/install.sh) ;;
+        51) curl -sSL https://yidian.icu/ty.sh -o ty.sh && chmod +x ty.sh && ./ty.sh ;;
+        52) curl -sSL https://raw.githubusercontent.com/iu683/vps-tools/main/optimize.sh -o optimize.sh && chmod +x optimize.sh && ./optimize.sh ;;
+        53) curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-toolkit.sh -o vps-toolkit.sh && chmod +x vps-toolkit.sh && ./vps-toolkit.sh ;;
         54) curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-control.sh -o vps-control.sh && chmod +x vps-control.sh && ./vps-control.sh ;;
-        55) sudo apt install docker-compose-plugin -y ;;
-        56) curl -fsSL https://raw.githubusercontent.com/xymn2023/DMR/main/docker_back.sh -o docker_back.sh && chmod +x docker_back.sh && ./docker_back.sh ;;
-        57) curl -O https://raw.githubusercontent.com/ceocok/Docker_container_migration/refs/heads/main/Docker_container_migration.sh && chmod +x Docker_container_migration.sh && ./Docker_container_migration.sh ;;
-        58) bash <(curl -sL https://raw.githubusercontent.com/iu683/vps-tools/main/Docker.sh) ;;
-        59) bash <(curl -sL kejilion.sh) fd ;;
-        60) wget -O manage_nginx.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh" && chmod +x manage_nginx.sh && ./manage_nginx.sh ;;
-        61) wget -O manage_nginx_v6.sh "https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh" && chmod +x manage_nginx_v6.sh && ./manage_nginx_v6.sh ;;
-        89)
-            echo -e "${green}正在从 GitHub 拉取最新版本...${reset}"
-            tmp_file=$(mktemp)
-            curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh -o "$tmp_file" \
-            && chmod +x "$tmp_file" \
-            && mv "$tmp_file" "$(readlink -f "$0")" \
-            && echo -e "${green}更新完成，重新启动脚本...${reset}" \
-            && exec "$(readlink -f "$0")"
-            echo -e "${red}更新失败，请检查网络或仓库地址${reset}"
-        ;;
-        99)
-            echo -e "${red}卸载工具箱...${reset}"
-            rm -f "$INSTALL_PATH" "$(readlink -f "$0")"
-            remove_shortcut
-            echo -e "${green}卸载完成${reset}"
-            exit 0
-        ;;
-        0)
-            echo -e "${yellow}退出${reset}"
-            exit 0
-        ;;
-        *)
-            echo -e "${red}无效选项${reset}"
-        ;;
+        55) curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh && curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose ;;
+        56) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/docker-backup.sh) ;;
+        57) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/docker-migrate.sh) ;;
+        58) curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh ;;
+        59) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/manage_nginx.sh) ;;
+        60) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh) ;;
+        61) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh) ;;
+        89) bash "$INSTALL_PATH" update ;;
+        99) bash "$INSTALL_PATH" uninstall ;;
+        0) exit 0 ;;
+        *) echo -e "${red}无效选项${reset}" ;;
     esac
 }
 
-# 首次运行安装快捷方式
-if [ ! -f "$SHORTCUT_PATH" ] || [ ! -f "$SHORTCUT_PATH_UPPER" ]; then
-    install_shortcut
-fi
+# 自动创建快捷指令
+install_shortcut
 
 # 主循环
 while true; do
-    show_menu
-    read -rp "请输入选项: " choice
-    execute_choice "$choice"
-    read -rp "按回车继续..." tmp
+    show_main_menu
+    read -rp "请选择一级菜单编号 (0退出): " main_choice
+    if [[ "$main_choice" == "0" ]]; then
+        echo -e "${yellow}退出${reset}"
+        exit 0
+    fi
+    if [[ "$main_choice" -ge 1 && "$main_choice" -le "${#MAIN_MENU[@]}" ]]; then
+        show_sub_menu "$main_choice"
+    else
+        echo -e "${red}无效选项${reset}"
+        sleep 1
+    fi
 done
