@@ -102,27 +102,29 @@ show_sub_menu() {
         map+=("$num")
     done
 
-    echo -ne "${red}请输入要执行的编号 (00 返回一级菜单)：${reset} "
-    read -r choice
+    while true; do
+        echo -ne "${red}请输入要执行的编号 (00 返回一级菜单)：${reset}"
+        read -r choice
 
-    if [[ "$choice" == "00" ]]; then
-        return
-    fi
+        if [[ "$choice" == "00" ]]; then
+            return
+        fi
 
-    if [[ ! " ${map[*]} " =~ " $choice " ]]; then
-        echo -e "${red}无效选项${reset}"
-        sleep 1
-        return
-    fi
+        if [[ ! " ${map[*]} " =~ (^|[[:space:]])$choice($|[[:space:]]) ]]; then
+            echo -e "${red}无效选项${reset}"
+            continue
+        fi
 
-    execute_choice "$choice"
+        execute_choice "$choice"
 
-    if [[ "$choice" == "0" || "$choice" == "99" ]]; then
-        return
-    fi
-
-    read -rp "$(echo -e "${red}按回车返回二级菜单...${reset}")" tmp
+        # 只有 0/99 才退出二级菜单
+        if [[ "$choice" != "0" && "$choice" != "99" ]]; then
+            read -rp $'\e[31m按回车返回二级菜单...\e[0m' tmp
+        fi
+        break
+    done
 }
+
 
 # 安装快捷指令
 install_shortcut() {
