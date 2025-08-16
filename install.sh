@@ -39,4 +39,4 @@ create_shortcut "m"
 create_shortcut "M"
 
 # 红色提示
-echo -e "\n\033[31m安装/升级完成！你可以输入 m 或 M 运行iu工具箱。\033[0m\n"
+echo -e "\n\033[31m安装/升级完成！你可以输入 \033[33mm\033[31m 或 \033[33mM\033[31m 运行iu工具箱。\033[0m\n"
