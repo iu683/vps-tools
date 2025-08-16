@@ -115,12 +115,12 @@ show_sub_menu() {
             continue
         fi
 
-        # 执行选择
         execute_choice "$choice"
 
         # 除退出、卸载、更新脚本外，其它都按回车返回二级菜单
         if [[ "$choice" != "0" && "$choice" != "99" && "$choice" != "89" ]]; then
             read -rp $'\e[31m按回车返回二级菜单...\e[0m' tmp
+            # 这里不 break，让循环继续，等待下一次输入
         fi
     done
 }
