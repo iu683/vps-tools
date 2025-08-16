@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 工具箱脚本 URL（请替换为你的脚本地址）
-TOOLBOX_URL="https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh"
+TOOLBOX_URL="https://raw.githubusercontent.com/iu683/vps-tools/main/vps-toolbox.sh"
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 
