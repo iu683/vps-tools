@@ -105,13 +105,12 @@ show_sub_menu() {
         return
     fi
 
-    # 如果执行的选项是 0 或 99（退出/卸载），就直接 return，不显示回车提示
+    # 避免在退出/卸载时还提示“按回车返回二级菜单...”
     if [[ "$choice" == "0" || "$choice" == "99" ]]; then
         return
     fi
 
     read -rp "按回车返回二级菜单..." tmp
-
 }
 
 # 安装快捷指令
@@ -206,7 +205,6 @@ execute_choice() {
         *) echo -e "${red}无效选项${reset}"; return 1 ;;
     esac
 }
-
 
 # 自动创建快捷指令（只安装一次）
 if [[ ! -f "$SHORTCUT_PATH" || ! -f "$SHORTCUT_PATH_UPPER" ]]; then
