@@ -89,21 +89,35 @@ show_main_menu() {
     echo
 }
 
-# 显示二级菜单并选择
+# 显示二级菜单并选择（安全模式）
 show_sub_menu() {
     local idx="$1"
     IFS='|' read -ra options <<< "${SUB_MENU[idx]}"
+    local map=()
+    echo
     for opt in "${options[@]}"; do
+        # 提取编号，例如 "01 更新源" -> "01"
+        local num="${opt%% *}"
         echo -e "${green}$opt${reset}"
+        map+=("$num")
     done
+
     echo -ne "${red}请输入要执行的编号 (00 返回一级菜单)：${reset} "
     read -r choice
+
     if [[ "$choice" == "00" ]]; then
         return
     fi
-    if ! execute_choice "$choice"; then
+
+    # 检查输入是否在 map 中
+    if [[ ! " ${map[*]} " =~ " $choice " ]]; then
+        echo -e "${red}无效选项${reset}"
+        sleep 1
         return
     fi
+
+    # 执行对应操作
+    execute_choice "$choice"
 
     # 避免在退出/卸载时还提示“按回车返回二级菜单...”
     if [[ "$choice" == "0" || "$choice" == "99" ]]; then
