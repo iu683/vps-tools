@@ -115,15 +115,16 @@ show_sub_menu() {
             continue
         fi
 
+        # 执行选择
         execute_choice "$choice"
 
-        # 只有 0/99 才退出二级菜单
-        if [[ "$choice" != "0" && "$choice" != "99" ]]; then
+        # 除退出、卸载、更新脚本外，其它都按回车返回二级菜单
+        if [[ "$choice" != "0" && "$choice" != "99" && "$choice" != "89" ]]; then
             read -rp $'\e[31m按回车返回二级菜单...\e[0m' tmp
         fi
-        break
     done
 }
+
 
 
 # 安装快捷指令
