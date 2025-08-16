@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# Windows 10 DD 重装菜单脚本（增强版）
+# Windows 10 DD 重装菜单脚本（增强版 + 重启提示 + Root 检测）
 # 作者: 整理示例
 # ========================================
 
@@ -9,10 +9,17 @@ YELLOW="\033[33m"
 RED="\033[31m"
 RESET="\033[0m"
 
+# 检测是否为 root 用户
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}请使用 root 用户或 sudo 运行此脚本${RESET}"
+    echo -e "${YELLOW}示例: sudo bash $0${RESET}"
+    exit 1
+fi
+
 # 更新系统和安装工具
 install_tools() {
     echo -e "${GREEN}正在更新系统并安装必要工具...${RESET}"
-    sudo apt update && sudo apt install curl wget -y
+    apt update && apt install curl wget -y
 }
 
 # 显示默认账户信息
@@ -20,6 +27,21 @@ show_account_info() {
     echo -e "${YELLOW}默认账户信息:${RESET}"
     echo -e "${YELLOW}用户名: Administrator${RESET}"
     echo -e "${YELLOW}密码: Teddysun.com${RESET}"
+}
+
+# 提示重启
+prompt_reboot() {
+    echo -ne "${YELLOW}是否立即重启系统？(y/n): ${RESET}"
+    read answer
+    case $answer in
+        [Yy]*) 
+            echo -e "${GREEN}系统即将重启...${RESET}"
+            reboot
+            ;;
+        *) 
+            echo -e "${GREEN}请在合适的时候手动重启系统${RESET}"
+            ;;
+    esac
 }
 
 # 下载文件函数，带进度和错误检测
@@ -47,6 +69,7 @@ install_v4dd() {
     echo -e "${GREEN}开始 V4DD Windows 10 安装流程...${RESET}"
     bash <(curl -sSL https://raw.githubusercontent.com/leitbogioro/Tools/master/Linux_reinstall/InstallNET.sh) -windows 10 -lang "cn"
     show_account_info
+    prompt_reboot
 }
 
 # V6DD 安装流程
@@ -57,6 +80,7 @@ install_v6dd() {
     download_file "https://dl.lamp.sh/vhd/zh-cn_windows10_ltsc.xz" "zh-cn_windows10_ltsc.xz"
     bash reinstall.sh dd --img "zh-cn_windows10_ltsc.xz"
     show_account_info
+    prompt_reboot
 }
 
 # 菜单
