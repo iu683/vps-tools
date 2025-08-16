@@ -92,38 +92,50 @@ show_main_menu() {
 # 显示二级菜单并选择
 show_sub_menu() {
     local idx="$1"
-    IFS='|' read -ra options <<< "${SUB_MENU[idx]}"
-    local map=()
-    echo
-    for opt in "${options[@]}"; do
-        local num="${opt%% *}"
-        local name="${opt#* }"
-        printf "${green}%02d %s${reset}\n" "$num" "$name"
-        map+=("$num")
-    done
-
     while true; do
+        IFS='|' read -ra options <<< "${SUB_MENU[idx]}"
+        local map=()
+        echo
+        for opt in "${options[@]}"; do
+            local num="${opt%% *}"
+            local name="${opt#* }"
+            printf "${green}%02d %s${reset}\n" "$num" "$name"
+            map+=("$num")
+        done
+
         echo -ne "${red}请输入要执行的编号 (00 返回一级菜单)：${reset}"
         read -r choice
 
+        # 按回车直接刷新菜单
+        if [[ -z "$choice" ]]; then
+            clear
+            continue
+        fi
+
+        # 输入 00 返回一级菜单
         if [[ "$choice" == "00" ]]; then
             return
         fi
 
+        # 判断是否为有效选项
         if [[ ! " ${map[*]} " =~ (^|[[:space:]])$choice($|[[:space:]]) ]]; then
             echo -e "${red}无效选项${reset}"
             continue
         fi
 
+        # 执行选项
         execute_choice "$choice"
 
-        # 除退出、卸载、更新脚本外，其它都按回车返回二级菜单
-        if [[ "$choice" != "0" && "$choice" != "99" && "$choice" != "89" ]]; then
-            read -rp $'\e[31m按回车返回二级菜单...\e[0m' tmp
-            # 这里不 break，让循环继续，等待下一次输入
+        # 只有 0/99 才退出二级菜单，否则按回车刷新二级菜单
+        if [[ "$choice" != "0" && "$choice" != "99" ]]; then
+            read -rp $'\e[31m按回车刷新二级菜单...\e[0m' tmp
+            clear
+        else
+            break
         fi
     done
 }
+
 
 
 
