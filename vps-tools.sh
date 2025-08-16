@@ -96,11 +96,14 @@ show_sub_menu() {
     for opt in "${options[@]}"; do
         echo -e "${green}$opt${reset}"
     done
-    read -rp "请输入要执行的编号 (b返回一级菜单): " choice
-    if [[ "$choice" == "b" ]]; then
+    echo -ne "${red}请输入要执行的编号 (00 返回一级菜单)：${reset} "
+    read -r choice
+    if [[ "$choice" == "00" ]]; then
         return
     fi
-    execute_choice "$choice"
+    if ! execute_choice "$choice"; then
+        return
+    fi
     read -rp "按回车返回二级菜单..." tmp
 }
 
@@ -193,17 +196,21 @@ execute_choice() {
             exit 0
             ;;
         0) exit 0 ;;
-        *) echo -e "${red}无效选项${reset}" ;;
+        *) echo -e "${red}无效选项${reset}"; return 1 ;;
     esac
 }
 
-# 自动创建快捷指令
-install_shortcut
+
+# 自动创建快捷指令（只安装一次）
+if [[ ! -f "$SHORTCUT_PATH" || ! -f "$SHORTCUT_PATH_UPPER" ]]; then
+    install_shortcut
+fi
 
 # 主循环
 while true; do
     show_main_menu
-    read -rp "请选择一级菜单编号 (0退出): " main_choice
+    echo -ne "${red}请选择一级菜单编号 (0退出)：${reset} "
+    read -r main_choice
     if [[ "$main_choice" == "0" ]]; then
         echo -e "${yellow}退出${reset}"
         exit 0
