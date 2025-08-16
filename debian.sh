@@ -13,8 +13,8 @@ echo "请确保已备份重要数据！"
 echo
 
 # 用户确认
-read -p "你确定要继续吗？(yes/no): " CONFIRM
-if [[ "$CONFIRM" != "yes" ]]; then
+read -p "你确定要继续吗？(y/n): " CONFIRM
+if [[ "$CONFIRM" != "y" ]]; then
     echo "已取消操作。"
     exit 1
 fi
