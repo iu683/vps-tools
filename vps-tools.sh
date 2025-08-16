@@ -96,7 +96,6 @@ show_sub_menu() {
     local map=()
     echo
     for opt in "${options[@]}"; do
-        # 提取编号，例如 "01 更新源" -> "01"
         local num="${opt%% *}"
         echo -e "${green}$opt${reset}"
         map+=("$num")
@@ -109,23 +108,32 @@ show_sub_menu() {
         return
     fi
 
-    # 检查输入是否在 map 中
-    if [[ ! " ${map[*]} " =~ " $choice " ]]; then
+    # 校验输入编号是否有效
+    valid=false
+    for num in "${map[@]}"; do
+        if [[ "$choice" == "$num" ]]; then
+            valid=true
+            break
+        fi
+    done
+
+    if [[ "$valid" == false ]]; then
         echo -e "${red}无效选项${reset}"
         sleep 1
         return
     fi
 
-    # 执行对应操作
+    # 执行操作
     execute_choice "$choice"
 
-    # 避免在退出/卸载时还提示“按回车返回二级菜单...”
+    # 避免在退出/卸载时提示
     if [[ "$choice" == "0" || "$choice" == "99" ]]; then
         return
     fi
 
-    read -rp "$(echo -e "${red}按回车返回二级菜单...${reset}")" tmp
+    read -rp "${red}按回车返回二级菜单...${reset}" tmp
 }
+
 
 # 安装快捷指令
 install_shortcut() {
