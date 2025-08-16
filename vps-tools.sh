@@ -1,12 +1,12 @@
 #!/bin/bash
-# VPS Toolbox - 交互式二级菜单版
+# VPS Toolbox - 最终整合版
 # 功能：
 # - 一级菜单加 ▶ 标识，字体绿色
-# - 二级菜单简洁显示
-# - 更新/卸载单独一级菜单
+# - 二级菜单简洁显示，输入 1~99 都可执行
 # - 快捷指令 m / M 自动创建
 # - 系统信息面板保留
 # - 彩色菜单和动态彩虹标题
+# - 完整安装/卸载逻辑
 
 INSTALL_PATH="$HOME/vps-toolbox.sh"
 SHORTCUT_PATH="/usr/local/bin/m"
@@ -22,7 +22,7 @@ cyan="\033[36m"
 # Ctrl+C 中断保护
 trap 'echo -e "\n${red}操作已中断${reset}"; exit 1' INT
 
-# 丝滑动态彩虹标题
+# 彩虹标题
 rainbow_animate() {
     local text="$1"
     local colors=(31 33 32 36 34 35)
@@ -42,7 +42,7 @@ show_system_usage() {
     disk_used_percent=$(df -h / | awk 'NR==2 {print $5}')
     disk_total=$(df -h / | awk 'NR==2 {print $2}')
     cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {printf "%.1f", usage}')
-    pad_string() { local str="$1"; printf "%${width}s" "$str"; }
+    pad_string() { local str="$1"; printf "%-${width}s" "$str"; }
     echo -e "${yellow}┌$(printf '─%.0s' $(seq 1 $width))┐${reset}"
     echo -e "${yellow}$(pad_string "📊 内存：${mem_used}Mi/${mem_total}Mi")${reset}"
     echo -e "${yellow}$(pad_string "💽 磁盘：${disk_used_percent} 用 / 总 ${disk_total}")${reset}"
@@ -50,7 +50,7 @@ show_system_usage() {
     echo -e "${yellow}└$(printf '─%.0s' $(seq 1 $width))┘${reset}\n"
 }
 
-# 一级菜单列表
+# 一级菜单
 MAIN_MENU=(
     "系统设置"
     "哪吒相关"
@@ -64,8 +64,8 @@ MAIN_MENU=(
     "更新/卸载"
 )
 
-# 二级菜单列表
-SUB_MENU[1]="01 更新源|02 安装curl|03 DDNS|04 本机信息|05 DDwindows10|06 临时禁用IPv6|07 添加SWAP|08 TCP窗口调优|09 安装Python|10 自定义DNS解锁|11 tun2socks|12 开放所有端口|13 VPS管理"
+# 二级菜单（编号去掉前导零，显示时格式化为两位数）
+SUB_MENU[1]="1 更新源|2 安装curl|3 DDNS|4 本机信息|5 DDwindows10|6 临时禁用IPv6|7 添加SWAP|8 TCP窗口调优|9 安装Python|10 自定义DNS解锁|11 tun2socks|12 开放所有端口|13 VPS管理"
 SUB_MENU[2]="14 安装unzip|15 卸载哪吒探针|16 v1关SSH|17 v0关SSH|18 V0哪吒监控"
 SUB_MENU[3]="19 宝塔面板|20 1panel面板|21 宝塔开心版|22 极光面板|23 哆啦A梦转发面板|24 国外机1Panel添加应用|25 国内机1Panel添加应用"
 SUB_MENU[4]="26 Hysteria2|27 3XUI|28 WARP|29 Surge-Snell|30 国外机EZRealm|31 国内机EZRealm|32 3XUI-Alpines|33 gost"
@@ -89,7 +89,7 @@ show_main_menu() {
     echo
 }
 
-# 显示二级菜单并选择（安全模式）
+# 显示二级菜单并选择
 show_sub_menu() {
     local idx="$1"
     IFS='|' read -ra options <<< "${SUB_MENU[idx]}"
@@ -97,7 +97,8 @@ show_sub_menu() {
     echo
     for opt in "${options[@]}"; do
         local num="${opt%% *}"
-        echo -e "${green}$opt${reset}"
+        local name="${opt#* }"
+        printf "${green}%02d %s${reset}\n" "$num" "$name"
         map+=("$num")
     done
 
@@ -108,32 +109,20 @@ show_sub_menu() {
         return
     fi
 
-    # 校验输入编号是否有效
-    valid=false
-    for num in "${map[@]}"; do
-        if [[ "$choice" == "$num" ]]; then
-            valid=true
-            break
-        fi
-    done
-
-    if [[ "$valid" == false ]]; then
+    if [[ ! " ${map[*]} " =~ " $choice " ]]; then
         echo -e "${red}无效选项${reset}"
         sleep 1
         return
     fi
 
-    # 执行操作
     execute_choice "$choice"
 
-    # 避免在退出/卸载时提示
     if [[ "$choice" == "0" || "$choice" == "99" ]]; then
         return
     fi
 
-    read -rp "${red}按回车返回二级菜单...${reset}" tmp
+    read -rp "$(echo -e "${red}按回车返回二级菜单...${reset}")" tmp
 }
-
 
 # 安装快捷指令
 install_shortcut() {
@@ -151,10 +140,10 @@ remove_shortcut() {
     sudo rm -f "$SHORTCUT_PATH" "$SHORTCUT_PATH_UPPER"
 }
 
-# 执行菜单选项（完整补全）
+# 执行菜单选项
 execute_choice() {
     case "$1" in
-    1) sudo apt update ;;
+        1) sudo apt update ;;
         2) sudo apt install curl -y ;;
         3) bash <(wget -qO- https://raw.githubusercontent.com/mocchen/cssmeihua/mochen/shell/ddns.sh) ;;
         4) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vpsinfo.sh) ;;
@@ -215,6 +204,7 @@ execute_choice() {
         59) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/manage_nginx.sh) ;;
         60) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh) ;;
         61) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh) ;;
+        89) bash "$INSTALL_PATH" ;; # 更新脚本
         99) 
             echo -e "${yellow}正在卸载工具箱...${reset}"
             remove_shortcut
