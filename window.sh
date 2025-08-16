@@ -1,7 +1,6 @@
 #!/bin/bash
 # ========================================
-# Windows 10 DD 重装菜单脚本（增强版 + 重启提示 + Root 检测 + 绝对路径修正）
-# 作者: 整理示例
+# Windows 10 DD 安装脚本（增强版 + V6DD URL安装 + Root检测 + 重启提示）
 # ========================================
 
 GREEN="\033[32m"
@@ -44,26 +43,6 @@ prompt_reboot() {
     esac
 }
 
-# 下载文件函数，带进度和错误检测
-download_file() {
-    local url="$1"
-    local output="$2"
-
-    echo -e "${GREEN}正在下载: $url${RESET}"
-    if command -v curl >/dev/null 2>&1; then
-        curl -# -O "$url"
-        status=$?
-    else
-        wget --progress=bar:force "$url" -O "$output"
-        status=$?
-    fi
-
-    if [ $status -ne 0 ]; then
-        echo -e "${RED}下载失败，请检查网络或链接${RESET}"
-        exit 1
-    fi
-}
-
 # V4DD 安装流程
 install_v4dd() {
     echo -e "${GREEN}开始 V4DD Windows 10 安装流程...${RESET}"
@@ -72,26 +51,16 @@ install_v4dd() {
     prompt_reboot
 }
 
-# V6DD 安装流程（绝对路径 + 错误检测）
+# V6DD 安装流程（使用官方 URL）
 install_v6dd() {
     echo -e "${GREEN}开始 V6DD Windows 10 安装流程...${RESET}"
-    
-    # 下载脚本
-    download_file "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh" "reinstall.sh"
-    chmod +x reinstall.sh
-    
-    # 下载镜像
-    download_file "https://dl.lamp.sh/vhd/zh-cn_windows10_ltsc.xz" "zh-cn_windows10_ltsc.xz"
-    
-    # 使用绝对路径
-    IMG_PATH="$(pwd)/zh-cn_windows10_ltsc.xz"
-    if [ ! -f "$IMG_PATH" ]; then
-        echo -e "${RED}镜像文件不可访问，请检查下载或路径${RESET}"
-        exit 1
-    fi
 
-    # 执行安装
-    bash reinstall.sh dd --img "$IMG_PATH"
+    # 下载 reinstall.sh
+    curl -O https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh || wget -O reinstall.sh
+    chmod +x reinstall.sh
+
+    # 直接使用官方镜像 URL 执行 DD
+    bash reinstall.sh dd --img https://dl.lamp.sh/vhd/zh-cn_windows10_ltsc.xz
 
     show_account_info
     prompt_reboot
