@@ -42,7 +42,7 @@ show_system_usage() {
     disk_used_percent=$(df -h / | awk 'NR==2 {print $5}')
     disk_total=$(df -h / | awk 'NR==2 {print $2}')
     cpu_usage=$(grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {printf "%.1f", usage}')
-    pad_string() { local str="$1"; printf "%-${width}s" "$str"; }
+    pad_string() { local str="$1"; printf "%${width}s" "$str"; }
     echo -e "${yellow}┌$(printf '─%.0s' $(seq 1 $width))┐${reset}"
     echo -e "${yellow}$(pad_string "📊 内存：${mem_used}Mi/${mem_total}Mi")${reset}"
     echo -e "${yellow}$(pad_string "💽 磁盘：${disk_used_percent} 用 / 总 ${disk_total}")${reset}"
