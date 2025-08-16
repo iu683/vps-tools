@@ -162,7 +162,7 @@ execute_choice() {
         2) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/debian.sh) ;;
         3) bash <(wget -qO- https://raw.githubusercontent.com/mocchen/cssmeihua/mochen/shell/ddns.sh) ;;
         4) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vpsinfo.sh) ;;
-        5) bash <(curl -sSL https://raw.githubusercontent.com/leitbogioro/Tools/master/Linux_reinstall/InstallNET.sh) -windows 10 -lang "cn" ;;
+        5) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/window.sh) ;;
         6) sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1 ;;
         7) wget https://www.moerats.com/usr/shell/swap.sh && bash swap.sh ;;
         8) wget http://sh.nekoneko.cloud/tools.sh -O tools.sh && bash tools.sh ;;
