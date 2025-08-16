@@ -1,6 +1,6 @@
 #!/bin/bash
 # ========================================
-# Windows 10 DD 重装菜单脚本（增强版 + 重启提示 + Root 检测）
+# Windows 10 DD 重装菜单脚本（增强版 + 重启提示 + Root 检测 + 绝对路径修正）
 # 作者: 整理示例
 # ========================================
 
@@ -72,13 +72,27 @@ install_v4dd() {
     prompt_reboot
 }
 
-# V6DD 安装流程
+# V6DD 安装流程（绝对路径 + 错误检测）
 install_v6dd() {
     echo -e "${GREEN}开始 V6DD Windows 10 安装流程...${RESET}"
+    
+    # 下载脚本
     download_file "https://raw.githubusercontent.com/bin456789/reinstall/main/reinstall.sh" "reinstall.sh"
     chmod +x reinstall.sh
+    
+    # 下载镜像
     download_file "https://dl.lamp.sh/vhd/zh-cn_windows10_ltsc.xz" "zh-cn_windows10_ltsc.xz"
-    bash reinstall.sh dd --img "zh-cn_windows10_ltsc.xz"
+    
+    # 使用绝对路径
+    IMG_PATH="$(pwd)/zh-cn_windows10_ltsc.xz"
+    if [ ! -f "$IMG_PATH" ]; then
+        echo -e "${RED}镜像文件不可访问，请检查下载或路径${RESET}"
+        exit 1
+    fi
+
+    # 执行安装
+    bash reinstall.sh dd --img "$IMG_PATH"
+
     show_account_info
     prompt_reboot
 }
