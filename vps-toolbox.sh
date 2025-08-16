@@ -103,7 +103,7 @@ show_sub_menu() {
             map+=("$num")
         done
 
-        echo -ne "${red}请输入要执行的编号 ${yellow}(00 返回一级菜单)${red}：${reset}"
+        echo -ne "${red}请输入要执行的编号 ${yellow}(00返回一级菜单)${red}：${reset}"
         read -r choice
 
         # 按回车直接刷新菜单
