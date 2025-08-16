@@ -74,7 +74,7 @@ SUB_MENU[6]="45 Sub-Store|46 WebSSH|47 Poste.io 邮局|48 OpenList|49 应用管�
 SUB_MENU[7]="50 老王工具箱|51 科技lion|52 一点科技|53 服务器优化工具|54 VPS-Toolkit"
 SUB_MENU[8]="55 安装 DockerCompose|56 Docker备份和恢复|57 Docker容器迁移|58 Docker管理"
 SUB_MENU[9]="59 NGINX反代|60 1kejiNGINX反代(V4)|61 1kejiNGINX反代(V6)"
-SUB_MENU[10]="89 更新脚本|99 卸载工具箱|0 退出"
+SUB_MENU[10]="89 更新脚本|99 卸载工具箱"
 
 # 显示一级菜单
 show_main_menu() {
