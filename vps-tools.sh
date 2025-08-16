@@ -110,7 +110,7 @@ show_sub_menu() {
         return
     fi
 
-    read -rp "按回车返回二级菜单..." tmp
+    read -rp "$(echo -e "${red}按回车返回二级菜单...${reset}")" tmp
 }
 
 # 安装快捷指令
