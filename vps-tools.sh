@@ -204,7 +204,20 @@ execute_choice() {
         59) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/manage_nginx.sh) ;;
         60) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx.sh) ;;
         61) bash <(curl -fsSL https://raw.githubusercontent.com/1keji/AddIPv6/main/manage_nginx_v6.sh) ;;
-        89) bash "$INSTALL_PATH" ;; # 更新脚本
+        89)
+            echo -e "${yellow}正在更新脚本...${reset}"
+            # 下载最新版本覆盖本地脚本
+            curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vps-tools.sh -o "$INSTALL_PATH"
+            if [[ $? -ne 0 ]]; then
+                echo -e "${red}更新失败，请检查网络或GitHub地址${reset}"
+                return 1
+            fi
+            chmod +x "$INSTALL_PATH"
+            echo -e "${green}脚本已更新完成！${reset}"
+            # 重新执行最新脚本
+            exec bash "$INSTALL_PATH"
+            ;;
+
         99) 
             echo -e "${yellow}正在卸载工具箱...${reset}"
             remove_shortcut
