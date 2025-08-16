@@ -84,7 +84,7 @@ show_main_menu() {
     rainbow_animate "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     show_system_usage
     for i in "${!MAIN_MENU[@]}"; do
-        echo -e "${green}▶ $((i+1)). ${MAIN_MENU[i]}${reset}"
+        printf "${green}▶ %02d. %s${reset}\n" "$((i+1))" "${MAIN_MENU[i]}"
     done
     echo
 }
@@ -104,7 +104,14 @@ show_sub_menu() {
     if ! execute_choice "$choice"; then
         return
     fi
+
+    # 如果执行的选项是 0 或 99（退出/卸载），就直接 return，不显示回车提示
+    if [[ "$choice" == "0" || "$choice" == "99" ]]; then
+        return
+    fi
+
     read -rp "按回车返回二级菜单..." tmp
+
 }
 
 # 安装快捷指令
