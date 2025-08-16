@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# 颜色定义
+# ================== 颜色定义 ==================
 white="\033[37m"
 purple="\033[35m"
+green="\033[32m"
 re="\033[0m"
 
-# ASCII VPS Logo
+# ================== ASCII VPS Logo ==================
 printf -- "${purple}"
 printf -- " _    __ ____   _____ \n"
 printf -- "| |  / // __ \\ / ___/ \n"
@@ -14,11 +15,27 @@ printf -- "| |/ // ____/ ___/ /  \n"
 printf -- "|___//_/     /____/   \n"
 printf -- "${re}"
 
-# 安装依赖函数，支持多包管理器，并检查是否已安装
-install_deps(){
-  deps=("curl" "vnstat" "lsb-release" "redhat-lsb-core")
+# ================== 系统检测函数 ==================
+detect_os(){
+  if command -v lsb_release >/dev/null 2>&1; then
+    os_info=$(lsb_release -ds)
+  elif [ -f /etc/os-release ]; then
+    source /etc/os-release
+    os_info=$PRETTY_NAME
+  elif [ -f /etc/debian_version ]; then
+    os_info="Debian $(cat /etc/debian_version)"
+  elif [ -f /etc/redhat-release ]; then
+    os_info=$(cat /etc/redhat-release)
+  else
+    os_info="未知系统"
+  fi
+  echo -e "\n检测到系统: ${purple}${os_info}${re}\n"
+}
 
+# ================== 依赖安装函数 ==================
+install_deps(){
   if command -v apt >/dev/null 2>&1; then
+    deps=("curl" "vnstat" "lsb-release" "bc")
     apt update -y
     for pkg in "${deps[@]}"; do
       if ! dpkg -s "$pkg" >/dev/null 2>&1; then
@@ -29,6 +46,7 @@ install_deps(){
       fi
     done
   elif command -v yum >/dev/null 2>&1; then
+    deps=("curl" "vnstat" "redhat-lsb-core" "bc")
     for pkg in "${deps[@]}"; do
       if ! rpm -q "$pkg" >/dev/null 2>&1; then
         echo "安装 $pkg ..."
@@ -38,6 +56,7 @@ install_deps(){
       fi
     done
   elif command -v dnf >/dev/null 2>&1; then
+    deps=("curl" "vnstat" "redhat-lsb-core" "bc")
     for pkg in "${deps[@]}"; do
       if ! rpm -q "$pkg" >/dev/null 2>&1; then
         echo "安装 $pkg ..."
@@ -47,6 +66,7 @@ install_deps(){
       fi
     done
   elif command -v zypper >/dev/null 2>&1; then
+    deps=("curl" "vnstat" "lsb-release" "bc")
     for pkg in "${deps[@]}"; do
       if ! rpm -q "$pkg" >/dev/null 2>&1; then
         echo "安装 $pkg ..."
@@ -58,11 +78,16 @@ install_deps(){
   else
     printf -- "%b未识别的包管理器，跳过依赖安装%b\n" "$white" "$re"
   fi
+
+  # 安装完成提示
+  echo -e "\n${green}依赖检查完成！${re}\n"
 }
 
+# ================== 执行顺序 ==================
+detect_os
 install_deps
 
-# 获取公网IP，超时则提示无法获取
+# ================== 公网IP获取 ==================
 ipv4_address=$(curl -s --max-time 5 ipv4.icanhazip.com)
 ipv4_address=${ipv4_address:-无法获取}
 ipv6_address=$(curl -s --max-time 5 ipv6.icanhazip.com)
@@ -70,7 +95,7 @@ ipv6_address=${ipv6_address:-无法获取}
 
 clear
 
-# CPU型号
+# ================== CPU型号 ==================
 get_cpu_info(){
   if grep -q 'model name' /proc/cpuinfo 2>/dev/null; then
     grep 'model name' /proc/cpuinfo | head -1 | sed -r 's/model name\s*:\s*//'
@@ -82,7 +107,7 @@ get_cpu_info(){
 }
 cpu_info=$(get_cpu_info)
 
-# CPU占用率
+# ================== CPU占用率 ==================
 get_cpu_usage(){
   local cpu1=($(head -n1 /proc/stat))
   local idle1=${cpu1[4]}
@@ -106,14 +131,13 @@ get_cpu_usage(){
   echo "$(awk "BEGIN{printf \"%.1f\", $usage}")%"
 }
 cpu_usage_percent=$(get_cpu_usage)
-
 cpu_cores=$(nproc)
 
-# 内存与硬盘信息
+# ================== 内存与硬盘信息 ==================
 mem_info=$(free -m | awk 'NR==2{printf "%.2f/%.2f MB (%.2f%%)", $3/1024, $2/1024, $3*100/$2}')
 disk_info=$(df -h / | awk 'NR==2{printf "%d/%dGB (%s)", $3,$2,$5}')
 
-# 地理位置与ISP
+# ================== 地理位置与ISP ==================
 country=$(curl -s --max-time 3 ipinfo.io/country)
 country=${country:-未知}
 city=$(curl -s --max-time 3 ipinfo.io/city)
@@ -121,14 +145,13 @@ city=${city:-未知}
 isp_info=$(curl -s --max-time 3 ipinfo.io/org)
 isp_info=${isp_info:-未知}
 
-# 系统信息
+# ================== 系统信息 ==================
 cpu_arch=$(uname -m)
 hostname=$(hostname)
 kernel_version=$(uname -r)
 congestion_algorithm=$(sysctl -n net.ipv4.tcp_congestion_control 2>/dev/null || echo "未知")
 queue_algorithm=$(sysctl -n net.core.default_qdisc 2>/dev/null || echo "未知")
 
-# OS信息获取
 get_os_info(){
   if command -v lsb_release >/dev/null 2>&1; then
     lsb_release -ds
@@ -145,7 +168,7 @@ get_os_info(){
 }
 os_info=$(get_os_info)
 
-# 格式化流量
+# ================== 格式化流量 ==================
 format_bytes(){
   local bytes=$1
   local units=("Bytes" "KB" "MB" "GB" "TB")
@@ -157,7 +180,7 @@ format_bytes(){
   echo "$bytes ${units[i]}"
 }
 
-# 网络流量统计，排除lo和docker等接口
+# ================== 网络流量统计 ==================
 get_net_traffic(){
   local rx_total=0
   local tx_total=0
@@ -178,7 +201,7 @@ get_net_traffic(){
 }
 output=$(get_net_traffic)
 
-# 时间与运行时长
+# ================== 时间与运行时长 ==================
 current_time=$(date "+%Y-%m-%d %I:%M %p")
 swap_used=$(free -m | awk 'NR==3{print $3}')
 swap_total=$(free -m | awk 'NR==3{print $2}')
@@ -190,7 +213,7 @@ else
 fi
 runtime=$(awk -F. '{run_days=int($1/86400); run_hours=int(($1%86400)/3600); run_minutes=int(($1%3600)/60); if(run_days>0) printf("%d天 ",run_days); if(run_hours>0) printf("%d时 ",run_hours); printf("%d分\n",run_minutes)}' /proc/uptime)
 
-# 输出信息
+# ================== 输出信息 ==================
 printf -- "%b系统信息详情%b\n" "$white" "$re"
 printf -- "------------------------\n"
 printf -- "%b主机名: %b%s%b\n" "$white" "$purple" "$hostname" "$re"
