@@ -55,7 +55,7 @@ MAIN_MENU=(
     "系统设置"
     "哪吒相关"
     "面板相关"
-    "代理"
+    "代理工具"
     "网络解锁"
     "应用商店"
     "VPS工具箱合集"
@@ -65,11 +65,11 @@ MAIN_MENU=(
 )
 
 # 二级菜单（编号去掉前导零，显示时格式化为两位数）
-SUB_MENU[1]="1 更新源|2 安装curl|3 DDNS|4 本机信息|5 DDwindows10|6 临时禁用IPv6|7 添加SWAP|8 TCP窗口调优|9 安装Python|10 自定义DNS解锁|11 tun2socks|12 开放所有端口|13 VPS管理"
+SUB_MENU[1]="1 更新系统|2 DDdebian12|3 DDNS|4 系统信息|5 DDwindows10|6 临时禁用IPv6|7 添加SWAP|8 TCP窗口调优|9 安装Python|10 自定义DNS解锁|11 tun2socks|12 开放所有端口|13 VPS管理"
 SUB_MENU[2]="14 安装unzip|15 卸载哪吒探针|16 v1关SSH|17 v0关SSH|18 V0哪吒监控"
 SUB_MENU[3]="19 宝塔面板|20 1panel面板|21 宝塔开心版|22 极光面板|23 哆啦A梦转发面板|24 国外机1Panel添加应用|25 国内机1Panel添加应用"
-SUB_MENU[4]="26 Hysteria2|27 3XUI|28 WARP|29 Surge-Snell|30 国外机EZRealm|31 国内机EZRealm|32 3XUI-Alpines|33 gost"
-SUB_MENU[5]="34 IP解锁-IPv4|35 IP解锁-IPv6|36 网络质量-IPv4|37 网络质量-IPv6|38 NodeQuality脚本|39 流媒体解锁|40 融合怪测试|41 国外机三网测速|42 国内机三网测速|43 国外机三网延迟测试|44 国内机三网延迟测试"
+SUB_MENU[4]="26 Hysteria2|27 3XUI|28 WARP|29 Surge-Snell|30 国外机EZRealm|31 国内机EZRealm|32 gost|33 BBR管理|34 代理协议"
+SUB_MENU[5]="35 网络质量体检脚本|36 回程测试|37 完整路由检测|38 NodeQuality脚本|39 流媒体解锁|40 融合怪测试|41 国外机三网测速|42 国内机三网测速|43 国外机三网延迟测试|44 国内机三网延迟测试"
 SUB_MENU[6]="45 Sub-Store|46 WebSSH|47 Poste.io 邮局|48 OpenList|49 应用管理工具"
 SUB_MENU[7]="50 老王工具箱|51 科技lion|52 一点科技|53 VPS优化工具|54 VPS-Toolkit"
 SUB_MENU[8]="55 安装 DockerCompose|56 Docker备份和恢复|57 Docker容器迁移|58 Docker管理"
@@ -158,8 +158,8 @@ remove_shortcut() {
 # 执行菜单选项
 execute_choice() {
     case "$1" in
-        1) sudo apt update ;;
-        2) sudo apt install curl -y ;;
+        1) sudo apt update && sudo apt install curl wget -y ;;
+        2) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/debian.sh) ;;
         3) bash <(wget -qO- https://raw.githubusercontent.com/mocchen/cssmeihua/mochen/shell/ddns.sh) ;;
         4) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/vps-tools/main/vpsinfo.sh) ;;
         5) bash <(curl -sSL https://raw.githubusercontent.com/leitbogioro/Tools/master/Linux_reinstall/InstallNET.sh) -windows 10 -lang "cn" ;;
@@ -189,12 +189,12 @@ execute_choice() {
         29) bash <(curl -L -s menu.jinqians.com) ;;
         30) wget -N https://raw.githubusercontent.com/shiyi11yi/EZRealm/main/realm.sh && chmod +x realm.sh && ./realm.sh ;;
         31) wget -N https://raw.githubusercontent.com/shiyi11yi/EZRealm/main/CN/realm.sh && chmod +x realm.sh && ./realm.sh ;;
-        32) apk add curl bash gzip openssl && bash <(curl -Ls https://raw.githubusercontent.com/StarVM-OpenSource/3x-ui-Apline/refs/heads/main/install.sh) ;;
-        33) wget --no-check-certificate -O gost.sh https://raw.githubusercontent.com/qqrrooty/EZgost/main/gost.sh && chmod +x gost.sh && ./gost.sh ;;
-        34) bash <(curl -Ls https://IP.Check.Place) -4 ;;
-        35) bash <(curl -Ls https://IP.Check.Place) -6 ;;
-        36) bash <(curl -Ls https://Net.Check.Place) -4 ;;
-        37) bash <(curl -Ls https://Net.Check.Place) -6 ;;
+        32) wget --no-check-certificate -O gost.sh https://raw.githubusercontent.com/qqrrooty/EZgost/main/gost.sh && chmod +x gost.sh && ./gost.sh ;;
+        33) wget --no-check-certificate -O tcpx.sh https://raw.githubusercontent.com/ylx2016/Linux-NetSpeed/master/tcpx.sh && chmod +x tcpx.sh && ./tcpx.sh ;;
+        34) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/proxy/main/proxy.sh) ;;
+        35) bash <(curl -fsSL https://raw.githubusercontent.com/iu683/unblock/main/network_check.sh) ;;
+        36) curl https://raw.githubusercontent.com/ludashi2020/backtrace/main/install.sh -sSf | sh ;;
+        37) bash <(curl -Ls https://Net.Check.Place) -R ;;
         38) bash <(curl -sL https://run.NodeQuality.com) ;;
         39) bash <(curl -L -s https://raw.githubusercontent.com/lmc999/RegionRestrictionCheck/main/check.sh) ;;
         40) curl -L https://gitlab.com/spiritysdx/za/-/raw/main/ecs.sh -o ecs.sh && chmod +x ecs.sh && bash ecs.sh ;;
